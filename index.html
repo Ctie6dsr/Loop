@@ -1,542 +1,1276 @@
-<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8">
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Auto Loop Finder</title><style>
-:root{--bg:#0a0a0f;--card:rgba(255,255,255,.04);--border:rgba(255,255,255,.1);--accent:#38bdf8;--accent-2:#a855f7;--glow:rgba(56,189,248,.35);--text:#e5e7eb;--soft:#9ca3af;--danger:#ff3b30}
-*{margin:0;padding:0;box-sizing:border-box}
-body{min-height:100vh;padding:36px 18px;color:var(--text);font-family:"Inter","PingFang SC","Microsoft YaHei",-apple-system,sans-serif;background:var(--bg);background-image:radial-gradient(600px 400px at 15% 0%,rgba(56,189,248,.10),transparent 60%),radial-gradient(700px 500px at 90% 100%,rgba(168,85,247,.10),transparent 60%);background-attachment:fixed}
-.wrap{max-width:760px;margin:0 auto}
+<title>Auto Loop Finder · Pro</title>
+<style>
+:root{--bg:#0a0a0f;--card:rgba(255,255,255,.04);--border:rgba(255,255,255,.1);--accent:#38bdf8;--accent-2:#a855f7;--glow:rgba(56,189,248,.35);--text:#e5e7eb;--soft:#9ca3af;--danger:#ff3b30;--ok:#4ade80}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{min-height:100vh;padding:28px 16px 60px;color:var(--text);font-family:"Inter","PingFang SC","Microsoft YaHei",-apple-system,sans-serif;background:var(--bg);background-image:radial-gradient(600px 400px at 15% 0%,rgba(56,189,248,.10),transparent 60%),radial-gradient(700px 500px at 90% 100%,rgba(168,85,247,.10),transparent 60%);background-attachment:fixed}
+.wrap{max-width:820px;margin:0 auto}
 h1{font-size:23px;font-weight:600;letter-spacing:.5px;margin-bottom:6px;background:linear-gradient(90deg,var(--accent),var(--accent-2));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
 .sub{color:var(--soft);font-size:13px;margin-bottom:22px;line-height:1.7}
-.drop{position:relative;display:block;border:1.5px dashed var(--border);border-radius:18px;padding:36px 20px;text-align:center;background:var(--card);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);cursor:pointer;transition:border-color .2s,box-shadow .2s,background .2s;-webkit-tap-highlight-color:transparent}
+.drop{position:relative;display:block;border:1.5px dashed var(--border);border-radius:18px;padding:32px 20px;text-align:center;background:var(--card);cursor:pointer;transition:border-color .2s,box-shadow .2s,background .2s}
 .drop:hover,.drop.over{border-color:var(--accent);box-shadow:0 0 26px var(--glow);background:rgba(56,189,248,.05)}
 .drop .big{font-size:15px;font-weight:600;margin-bottom:6px}
 .drop .small{font-size:12.5px;color:var(--soft)}
 .drop input[type=file]{position:absolute;left:0;top:0;width:100%;height:100%;opacity:0;cursor:pointer;font-size:0;z-index:2;-webkit-appearance:none;appearance:none}
-.status{margin-top:14px;font-size:13.5px;color:var(--soft);text-align:center;min-height:20px;line-height:1.6;word-break:break-all}
-.status.err{color:var(--danger)}.status.ok{color:var(--accent)}
-.status.warn{color:#fbbf24}
+.status{margin-top:12px;font-size:13.5px;color:var(--soft);text-align:center;min-height:20px;line-height:1.6;word-break:break-all}
+.status.err{color:var(--danger)}.status.ok{color:var(--accent)}.status.warn{color:#fbbf24}
 #env{margin-top:6px;font-size:11px;color:#555;text-align:center;font-family:monospace}
-.namerow{margin-top:12px;display:none;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap}
+.namerow{margin-top:10px;display:none;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap}
 .namerow.on{display:flex}
 .namerow label{font-size:12.5px;color:var(--soft)}
-.namerow input{background:rgba(255,255,255,.05);border:1px solid var(--border);color:var(--text);padding:8px 14px;border-radius:10px;font-size:13.5px;font-family:inherit;outline:none;min-width:200px;transition:border-color .15s,box-shadow .15s}
+.namerow input{background:rgba(255,255,255,.05);border:1px solid var(--border);color:var(--text);padding:8px 14px;border-radius:10px;font-size:13.5px;font-family:inherit;outline:none;min-width:200px}
 .namerow input:focus{border-color:var(--accent);box-shadow:0 0 14px var(--glow)}
-.panel{margin-top:20px;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:18px;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);display:none}
+.panel{margin-top:20px;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;display:none}
 .panel.on{display:block}
-.head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:14px;flex-wrap:wrap}
+.head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:12px;flex-wrap:wrap}
 .title{font-weight:600;font-size:15px}
 .meta{font-size:12.5px;color:var(--soft);margin-top:3px}
 .pill{font-size:12px;color:var(--accent);border:1px solid rgba(56,189,248,.3);background:rgba(56,189,248,.07);padding:5px 11px;border-radius:999px;font-variant-numeric:tabular-nums}
-.wavebox{position:relative;height:130px;border-radius:12px;overflow:hidden;border:1px solid var(--border);background:rgba(255,255,255,.03);cursor:pointer}
+.wavebox{position:relative;height:150px;border-radius:12px;overflow:hidden;border:1px solid var(--border);background:rgba(0,0,0,.25);touch-action:none;cursor:crosshair}
 canvas{display:block;width:100%;height:100%}
-.overlay{position:absolute;top:0;bottom:0;pointer-events:none;background:linear-gradient(180deg,rgba(56,189,248,.18),rgba(168,85,247,.18));border-left:1px solid var(--accent);border-right:1px solid var(--accent-2);box-shadow:inset 0 0 30px rgba(56,189,248,.14);display:none}
-.overlay.on{display:block}
-.playhead{position:absolute;top:0;bottom:0;width:2px;margin-left:-1px;left:0;background:#fff;box-shadow:0 0 10px rgba(255,255,255,.8);pointer-events:none;display:none}
+.playhead{position:absolute;top:0;bottom:0;width:2px;margin-left:-1px;left:0;background:#fff;box-shadow:0 0 10px rgba(255,255,255,.9);pointer-events:none;display:none;z-index:5}
 .playhead.on{display:block}
-.timebar{display:flex;justify-content:space-between;font-size:12px;color:var(--soft);margin-top:8px;font-variant-numeric:tabular-nums}
-.cands{margin-top:14px}.cands h4{font-size:12.5px;color:var(--soft);font-weight:500;margin-bottom:8px;letter-spacing:.4px}
-.cand{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 12px;border-radius:10px;border:1px solid var(--border);margin-bottom:6px;cursor:pointer;font-size:13px;transition:border-color .15s,background .15s}
+.timebar{display:flex;justify-content:space-between;font-size:12px;color:var(--soft);margin-top:6px;font-variant-numeric:tabular-nums}
+.seginfo{margin-top:10px;font-size:12px;color:var(--soft);min-height:18px;font-variant-numeric:tabular-nums}
+.seginfo b{color:var(--accent)}
+.cands{margin-top:12px;max-height:300px;overflow-y:auto;padding-right:4px;-webkit-overflow-scrolling:touch}
+.cands h4{font-size:12.5px;color:var(--soft);font-weight:500;margin-bottom:8px;letter-spacing:.4px}
+.cand{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 12px;border-radius:10px;border:1px solid var(--border);margin-bottom:6px;cursor:pointer;font-size:12.5px;transition:border-color .15s,background .15s}
 .cand:hover{border-color:rgba(255,255,255,.2)}
 .cand.sel{border-color:var(--accent);background:rgba(56,189,248,.06);box-shadow:0 0 16px var(--glow)}
-.cand .rng{font-variant-numeric:tabular-nums}
-.cand .tag{font-size:11px;color:var(--soft)}
-.cand .tag.rest{color:#4ade80}
-.params{margin-top:16px;padding:14px;background:rgba(255,255,255,.03);border-radius:12px;border:1px solid var(--border)}
+.cand .pair{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0}
+.cand .pa{color:#38bdf8;font-variant-numeric:tabular-nums}
+.cand .pb{color:#a855f7;font-variant-numeric:tabular-nums}
+.cand .sim{flex:0 0 50px;text-align:right;font-weight:600;color:var(--accent);font-variant-numeric:tabular-nums}
+.cand .sim.hi{color:var(--ok)}
+.params{margin-top:14px;padding:12px;background:rgba(255,255,255,.03);border-radius:12px;border:1px solid var(--border)}
 .params h4{font-size:12.5px;color:var(--soft);font-weight:500;margin-bottom:10px;letter-spacing:.4px}
-.param{display:flex;align-items:center;gap:10px;margin-bottom:10px;font-size:12.5px}
+.param{display:flex;align-items:center;gap:10px;margin-bottom:9px;font-size:12.5px}
 .param:last-child{margin-bottom:0}
-.param label{flex:0 0 100px;color:var(--soft)}
-.param input[type=range]{flex:1;height:4px;-webkit-appearance:none;appearance:none;background:rgba(255,255,255,.1);border-radius:2px;outline:none}
-.param input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:16px;height:16px;border-radius:50%;background:var(--accent);cursor:pointer;box-shadow:0 0 8px var(--glow);border:none}
-.param input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--accent);cursor:pointer;border:none;box-shadow:0 0 8px var(--glow)}
-.param .pv{flex:0 0 44px;text-align:right;color:var(--accent);font-variant-numeric:tabular-nums}
-.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.param label{flex:0 0 90px;color:var(--soft)}
+.param input[type=range]{flex:1;height:5px;-webkit-appearance:none;appearance:none;background:rgba(255,255,255,.1);border-radius:3px;outline:none}
+.param input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:20px;height:20px;border-radius:50%;background:var(--accent);cursor:pointer;box-shadow:0 0 8px var(--glow);border:none}
+.param input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:var(--accent);cursor:pointer;border:none;box-shadow:0 0 8px var(--glow)}
+.param .pv{flex:0 0 48px;text-align:right;color:var(--accent);font-variant-numeric:tabular-nums}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
 .btn{background:var(--card);color:var(--text);padding:10px 16px;border:1px solid var(--border);border-radius:12px;font-size:13.5px;font-family:inherit;cursor:pointer;user-select:none;transition:transform .15s,box-shadow .2s,border-color .2s}
 .btn:hover{transform:translateY(-1px);border-color:var(--accent);box-shadow:0 0 18px var(--glow)}
 .btn:active{transform:translateY(0)}
 .btn.primary{background:var(--accent);color:#05060a;font-weight:600;border:none;box-shadow:0 0 18px var(--glow)}
 .btn.ghost{background:transparent}
-</style></head><body><div class="wrap">
+.btn:disabled{opacity:.35;cursor:not-allowed;transform:none;box-shadow:none}
+@media(max-width:600px){
+  body{padding:20px 12px 50px}
+  .param label{flex:0 0 76px;font-size:12px}
+  .btn{padding:9px 14px;font-size:13px}
+  .wavebox{height:130px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
 <h1>Auto Loop Finder</h1>
-<p class="sub">频率加权 · 移调不变 · 质心门控 · 休息段优先 · 循环段最长 2 分钟</p>
+<p class="sub">段落级匹配 · 移调不变 · 节拍对齐 · 边界可拖拽微调</p>
+
 <label class="drop" id="drop" for="file">
 <div class="big">点击选择音频文件</div>
-<div class="small">支持 mp3 / m4a / wav / aac · 也可拖拽到此处</div>
+<div class="small">支持 mp3 / m4a / wav / aac · 也可拖拽</div>
 <input type="file" id="file" accept="audio/*,.mp3,.m4a,.wav,.aac,audio/mpeg,audio/mp4">
 </label>
+
 <div class="namerow" id="namerow">
 <label for="nameInput">歌曲名</label>
 <input type="text" id="nameInput" placeholder="输入歌曲名…" autocomplete="off">
 </div>
+
 <div class="status" id="status"></div>
 <div id="env"></div>
+
 <div class="panel" id="panel">
-<div class="head"><div><div class="title" id="pTitle">—</div><div class="meta" id="pMeta">—</div></div>
-<div class="pill" id="pPill">—</div></div>
-<div class="wavebox" id="wavebox"><canvas id="wave"></canvas>
-<div class="overlay" id="overlay"></div><div class="playhead" id="playhead"></div></div>
+<div class="head">
+<div><div class="title" id="pTitle">—</div><div class="meta" id="pMeta">—</div></div>
+<div class="pill" id="pPill">—</div>
+</div>
+
+<div class="wavebox" id="wavebox">
+<canvas id="wave"></canvas>
+<div class="playhead" id="playhead"></div>
+</div>
 <div class="timebar"><span id="tNow">0:00</span><span id="tTotal">0:00</span></div>
+
+<div class="seginfo" id="segInfo">点波形选段 · 拖边界手柄微调 · 点下方列表选段对</div>
+
 <div class="cands" id="cands"></div>
+
 <div class="params">
 <h4>参数调整（每首歌独立保存）</h4>
-<div class="param"><label>休息段优先</label><input type="range" id="pRest" min="0" max="1" step="0.05" value="0.7"><span class="pv" id="vRest">0.70</span></div>
-<div class="param"><label>质心门控</label><input type="range" id="pGate" min="0" max="1" step="0.05" value="0.35"><span class="pv" id="vGate">0.35</span></div>
-<div class="param"><label>相似度阈值</label><input type="range" id="pSim" min="0.3" max="0.8" step="0.02" value="0.5"><span class="pv" id="vSim">0.50</span></div>
-<div class="param"><label>最短循环</label><input type="range" id="pMin" min="4" max="30" step="1" value="8"><span class="pv" id="vMin">8s</span></div>
-<div class="param"><label>最长循环</label><input type="range" id="pMax" min="30" max="180" step="5" value="120"><span class="pv" id="vMax">120s</span></div>
+<div class="param"><label>最短段</label><input type="range" id="pMin" min="4" max="40" step="1" value="8"><span class="pv" id="vMin">8s</span></div>
+<div class="param"><label>最长段</label><input type="range" id="pMax" min="20" max="180" step="5" value="60"><span class="pv" id="vMax">60s</span></div>
+<div class="param"><label>相似度</label><input type="range" id="pSim" min="0.5" max="0.98" step="0.01" value="0.78"><span class="pv" id="vSim">0.78</span></div>
+<div class="param"><label>边界灵敏度</label><input type="range" id="pBnd" min="0.1" max="0.7" step="0.02" value="0.28"><span class="pv" id="vBnd">0.28</span></div>
+<div class="param"><label>音高比重</label><input type="range" id="pWei" min="0" max="1" step="0.05" value="0.5"><span class="pv" id="vWei">0.50</span></div>
 </div>
-<div class="row"><button class="btn primary" id="btnLoop">▶ 循环高潮</button>
-<button class="btn" id="btnFull">▶ 播放全曲</button>
-<button class="btn ghost" id="btnStop">■ 停止</button></div>
-</div></div>
+
+<div class="row">
+<button class="btn primary" id="btnLoopA">▶ 循环 A 段</button>
+<button class="btn" id="btnLoopB">▶ 循环 B 段</button>
+<button class="btn ghost" id="btnStop">■ 停止</button>
+</div>
+
+<div class="row">
+<button class="btn ghost" id="btnSplit">在播放头处拆分选中段</button>
+<button class="btn ghost" id="btnMergeL">与左邻合并</button>
+<button class="btn ghost" id="btnMergeR">与右邻合并</button>
+<button class="btn ghost" id="btnReset">重置边界</button>
+</div>
+</div>
+</div>
+
 <script>
-(()=>{'use strict';
-const $=s=>document.querySelector(s);
-const CFG={FMIN:30,FMAX:8000,HOP_SEC:0.10,FRAME_SEC:0.20,SIM_TIGHT:0.90,LABEL_MATCH:1.5,DS:1,CENTROID_SCALE:800,REST_BIAS:0.7,CENTROID_GATE:0.35,MIN_SIM:0.50,MIN_LOOP:8,MAX_LOOP:120};
-const DEF={REST_BIAS:0.7,CENTROID_GATE:0.35,MIN_SIM:0.50,MIN_LOOP:8,MAX_LOOP:120};
-const paramMemory={};
-const nameMap=(()=>{try{return JSON.parse(localStorage.getItem('loop-names')||'{}')}catch(e){return{}}})();
-function persistNameMap(){try{localStorage.setItem('loop-names',JSON.stringify(nameMap))}catch(e){}}
-function loadParams(name){const s=paramMemory[name];
-if(s){CFG.REST_BIAS=s.REST_BIAS;CFG.CENTROID_GATE=s.CENTROID_GATE;CFG.MIN_SIM=s.MIN_SIM;CFG.MIN_LOOP=s.MIN_LOOP;CFG.MAX_LOOP=s.MAX_LOOP}
-else{CFG.REST_BIAS=DEF.REST_BIAS;CFG.CENTROID_GATE=DEF.CENTROID_GATE;CFG.MIN_SIM=DEF.MIN_SIM;CFG.MIN_LOOP=DEF.MIN_LOOP;CFG.MAX_LOOP=DEF.MAX_LOOP}}
-function saveParams(name){paramMemory[name]={REST_BIAS:CFG.REST_BIAS,CENTROID_GATE:CFG.CENTROID_GATE,MIN_SIM:CFG.MIN_SIM,MIN_LOOP:CFG.MIN_LOOP,MAX_LOOP:CFG.MAX_LOOP}}
-const fmt=t=>{t=Math.max(0,t||0);return Math.floor(t/60)+':'+String(Math.floor(t%60)).padStart(2,'0')};
-const yieldUI=()=>new Promise(r=>setTimeout(r,16));
-const fw=f=>f<60?0.02:f<150?0.10:f<300?0.40:f<6000?1.0:0.55;
-/* iOS: 设置 audio session 类型，绕过静音拨片 */
-try{if(navigator.audioSession&&navigator.audioSession.type!=='playback')navigator.audioSession.type='playback'}catch(e){}
-(function(){const ua=navigator.userAgent;
-const isSafari=/^((?!chrome|android).)*safari/i.test(ua);
-const isIOS=/iPad|iPhone|iPod/.test(ua);
-const hasAC=!!(window.AudioContext||window.webkitAudioContext);
-const hasSession=!!navigator.audioSession;
-const lines=[];
-if(isIOS)lines.push('iOS');
-if(isSafari)lines.push('Safari');
-else if(/chrome/i.test(ua))lines.push('Chrome');
-lines.push(hasAC?'AudioContext✓':'AudioContext✗');
-lines.push(hasSession?'audioSession✓':'audioSession✗');
-$('#env').textContent=lines.join(' · ');})();
-function fft(re,im){const n=re.length;
-for(let i=1,j=0;i<n;i++){let bit=n>>1;for(;j&bit;bit>>=1)j^=bit;j^=bit;
-if(i<j){let t=re[i];re[i]=re[j];re[j]=t;t=im[i];im[i]=im[j];im[j]=t}}
-for(let len=2;len<=n;len<<=1){const ang=-2*Math.PI/len,wR=Math.cos(ang),wI=Math.sin(ang);
-for(let i=0;i<n;i+=len){let cR=1,cI=0;
-for(let j=0;j<len/2;j++){const uR=re[i+j],uI=im[i+j];
-const vR=re[i+j+len/2]*cR-im[i+j+len/2]*cI;
-const vI=re[i+j+len/2]*cI+im[i+j+len/2]*cR;
-re[i+j]=uR+vR;im[i+j]=uI+vI;re[i+j+len/2]=uR-vR;im[i+j+len/2]=uI-vI;
-const nR=cR*wR-cI*wI;cI=cR*wI+cI*wR;cR=nR}}}}
-function toMono(buf){const{numberOfChannels:n,length:L}=buf;
-if(n===1)return buf.getChannelData(0);
-const out=new Float32Array(L);
-for(let c=0;c<n;c++){const d=buf.getChannelData(c);for(let i=0;i<L;i++)out[i]+=d[i]}
-const g=1/n;for(let i=0;i<L;i++)out[i]*=g;return out}
-function computeFeatures(mono,sr){
-const hop=Math.round(CFG.HOP_SEC*sr);
-const fs=1<<Math.ceil(Math.log2(CFG.FRAME_SEC*sr));
-const half=fs>>1;
-const n=Math.max(1,Math.floor((mono.length-fs)/hop)+1);
-const win=new Float32Array(fs);
-for(let i=0;i<fs;i++)win[i]=0.5-0.5*Math.cos(2*Math.PI*i/(fs-1));
-const binC=new Int8Array(half).fill(-1);
-const binW=new Float32Array(half);
-for(let i=1;i<half;i++){const f=i*sr/fs;
-if(f<CFG.FMIN||f>CFG.FMAX)continue;
-const m=69+12*Math.log2(f/440);
-binC[i]=((Math.round(m)%12)+12)%12;binW[i]=fw(f)}
-const chroma=new Float32Array(n*12);
-const cen=new Float32Array(n);
-const lowR=new Float32Array(n);
-const re=new Float32Array(fs),im=new Float32Array(fs);
-for(let t=0;t<n;t++){const off=t*hop;
-for(let i=0;i<fs;i++){re[i]=mono[off+i]*win[i];im[i]=0}
-fft(re,im);
-const base=t*12;let sM=0,sMF=0,lE=0,tE=0;
-for(let i=1;i<half;i++){const m=Math.sqrt(re[i]*re[i]+im[i]*im[i]);
-const f=i*sr/fs;sM+=m;sMF+=m*f;tE+=m*m;
-if(f<200)lE+=m*m;
-const c=binC[i];if(c<0)continue;
-chroma[base+c]+=m*binW[i]}
-let nrm=0;for(let k=0;k<12;k++)nrm+=chroma[base+k]*chroma[base+k];
-nrm=Math.sqrt(nrm)||1;
-for(let k=0;k<12;k++)chroma[base+k]/=nrm;
-cen[t]=sM>0?sMF/sM:0;lowR[t]=tE>0?lE/tE:0}
-return{chroma,cen,lowR,n,hopSec:CFG.HOP_SEC}}
-function computeSSM_TI_raw(feat){
-const{chroma,n}=feat;
-const ssm=new Float32Array(n*n);
-const st=CFG.DS;
-for(let i=0;i<n;i+=st){
-const bi=i*12;
-const a0=chroma[bi],a1=chroma[bi+1],a2=chroma[bi+2],a3=chroma[bi+3],a4=chroma[bi+4],a5=chroma[bi+5],a6=chroma[bi+6],a7=chroma[bi+7],a8=chroma[bi+8],a9=chroma[bi+9],a10=chroma[bi+10],a11=chroma[bi+11];
-for(let j=i;j<n;j+=st){
-const bj=j*12;
-const b0=chroma[bj],b1=chroma[bj+1],b2=chroma[bj+2],b3=chroma[bj+3],b4=chroma[bj+4],b5=chroma[bj+5],b6=chroma[bj+6],b7=chroma[bj+7],b8=chroma[bj+8],b9=chroma[bj+9],b10=chroma[bj+10],b11=chroma[bj+11];
-let best=0,d;
-d=a0*b0+a1*b1+a2*b2+a3*b3+a4*b4+a5*b5+a6*b6+a7*b7+a8*b8+a9*b9+a10*b10+a11*b11;if(d>best)best=d;
-d=a0*b1+a1*b2+a2*b3+a3*b4+a4*b5+a5*b6+a6*b7+a7*b8+a8*b9+a9*b10+a10*b11+a11*b0;if(d>best)best=d;
-d=a0*b2+a1*b3+a2*b4+a3*b5+a4*b6+a5*b7+a6*b8+a7*b9+a8*b10+a9*b11+a10*b0+a11*b1;if(d>best)best=d;
-d=a0*b3+a1*b4+a2*b5+a3*b6+a4*b7+a5*b8+a6*b9+a7*b10+a8*b11+a9*b0+a10*b1+a11*b2;if(d>best)best=d;
-d=a0*b4+a1*b5+a2*b6+a3*b7+a4*b8+a5*b9+a6*b10+a7*b11+a8*b0+a9*b1+a10*b2+a11*b3;if(d>best)best=d;
-d=a0*b5+a1*b6+a2*b7+a3*b8+a4*b9+a5*b10+a6*b11+a7*b0+a8*b1+a9*b2+a10*b3+a11*b4;if(d>best)best=d;
-d=a0*b6+a1*b7+a2*b8+a3*b9+a4*b10+a5*b11+a6*b0+a7*b1+a8*b2+a9*b3+a10*b4+a11*b5;if(d>best)best=d;
-d=a0*b7+a1*b8+a2*b9+a3*b10+a4*b11+a5*b0+a6*b1+a7*b2+a8*b3+a9*b4+a10*b5+a11*b6;if(d>best)best=d;
-d=a0*b8+a1*b9+a2*b10+a3*b11+a4*b0+a5*b1+a6*b2+a7*b3+a8*b4+a9*b5+a10*b6+a11*b7;if(d>best)best=d;
-d=a0*b9+a1*b10+a2*b11+a3*b0+a4*b1+a5*b2+a6*b3+a7*b4+a8*b5+a9*b6+a10*b7+a11*b8;if(d>best)best=d;
-d=a0*b10+a1*b11+a2*b0+a3*b1+a4*b2+a5*b3+a6*b4+a7*b5+a8*b6+a9*b7+a10*b8+a11*b9;if(d>best)best=d;
-d=a0*b11+a1*b0+a2*b1+a3*b2+a4*b3+a5*b4+a6*b5+a7*b6+a8*b7+a9*b8+a10*b9+a11*b10;if(d>best)best=d;
-ssm[i*n+j]=best;ssm[j*n+i]=best}}
-return ssm}
-function applyGate(raw,cen,N,G,SC){
-const out=new Float32Array(N*N);
-const b1=1-G;
-for(let i=0;i<N;i++){const ci=cen[i];
-for(let j=i;j<N;j++){
-const cd=Math.abs(ci-cen[j]);
-const v=raw[i*N+j]*(b1+G*Math.exp(-cd/SC));
-out[i*N+j]=v;out[j*N+i]=v}}
-return out}
-function findRepeats(ssm,n,hopSec,duration,mono,sr,cen,lowR){
-const minLag=Math.max(2,Math.round(CFG.MIN_LOOP/hopSec));
-const maxLag=Math.min(n-2,Math.round(Math.min(duration*0.7,CFG.MAX_LOOP)/hopSec));
-if(maxLag<=minLag)return null;
-let bestLag=-1,bestMean=-1;
-for(let lag=minLag;lag<=maxLag;lag++){let s=0,c=0;
-for(let i=0;i+lag<n;i+=CFG.DS){s+=ssm[i*n+i+lag];c++}
-const m=s/(c||1);if(m>bestMean){bestMean=m;bestLag=lag}}
-if(bestLag<0||bestMean<CFG.MIN_SIM)return null;
-const lag=bestLag;
-const curve=new Float32Array(n);
-for(let i=0;i+lag<n;i++)curve[i]=ssm[i*n+i+lag];
-const winR=Math.max(2,Math.round(1.0/hopSec));
-const sm=new Float32Array(n);
-for(let i=0;i+lag<n;i++){let s=0,c=0;
-for(let j=Math.max(0,i-winR);j<=Math.min(n-1,i+winR);j++){if(j+lag>=n)break;s+=curve[j];c++}
-sm[i]=c?s/c:0}
-const thresh=bestMean*CFG.SIM_TIGHT;
-const segs=[];let cur=-1;
-for(let i=0;i+lag<n;i++){
-if(sm[i]>=thresh){if(cur<0)cur=i}
-else if(cur>=0){segs.push([cur,i]);cur=-1}}
-if(cur>=0)segs.push([cur,n-lag]);
-const minLen=Math.round(CFG.MIN_LOOP/hopSec);
-const valid=segs.filter(s=>s[1]-s[0]>=minLen).sort((a,b)=>(b[1]-b[0])-(a[1]-a[0]));
-if(!valid.length)return null;
-const cands=[];
-const add=(a,b,tag)=>cands.push({start:a*hopSec,end:b*hopSec,rms:segRMS(mono,sr,a*hopSec,b*hopSec),score:bestMean,tag});
-for(const[s,e]of valid){add(s,e,'A 段');
-if(e+lag<=n)add(s+lag,e+lag,'B 段');
-if(e+2*lag<=n)add(s+2*lag,e+2*lag,'C 段');
-if(e+3*lag<=n)add(s+3*lag,e+3*lag,'D 段')}
-cands.sort((a,b)=>a.start-b.start);
-const uniq=[];
-for(const c of cands){if(uniq.length&&c.start-uniq[uniq.length-1].start<CFG.LABEL_MATCH)continue;
-uniq.push(c)}
-let maxRms=0;
-for(const c of uniq)if(c.rms>maxRms)maxRms=c.rms;
-for(const c of uniq){
-const fa=Math.max(0,Math.floor(c.start/hopSec));
-const fb=Math.min(n,Math.ceil(c.end/hopSec));
-let sCen=0,sLow=0,cnt=0;
-for(let k=fa;k<fb;k++){sCen+=cen[k];sLow+=lowR[k];cnt++}
-if(cnt){sCen/=cnt;sLow/=cnt}
-c.restScore=0.45*(1-Math.min(sLow/0.5,1))+0.35*Math.min(sCen/2000,1)+0.20*(1-Math.min(c.rms/maxRms,1))}
-return{lag:lag*hopSec,mean:bestMean,cands:uniq,maxRms}}
-function segRMS(mono,sr,t0,t1){
-const a=Math.max(0,Math.floor(t0*sr)),b=Math.min(mono.length,Math.floor(t1*sr));
-if(b<=a)return 0;let s=0;for(let i=a;i<b;i++)s+=mono[i]*mono[i];
-return Math.sqrt(s/(b-a))}
-async function readFileAsArrayBuffer(file){
-return new Promise((res,rej)=>{
-const reader=new FileReader();
-reader.onload=()=>res(reader.result);
-reader.onerror=()=>rej(new Error('读取文件失败：'+(reader.error&&reader.error.message||'未知错误')));
-try{reader.readAsArrayBuffer(file)}catch(e){rej(e)}})}
-async function decodeWithFallback(file,ctx){
-const buf=await readFileAsArrayBuffer(file);
-try{
-return await new Promise((res,rej)=>{try{ctx.decodeAudioData(buf,res,rej)}catch(e){rej(e)}});
-}catch(e1){
-try{
-const OAC=window.OfflineAudioContext||window.webkitOfflineAudioContext;
-const off=new OAC(2,44100,44100);
-return await new Promise((res,rej)=>{try{off.decodeAudioData(buf,res,rej)}catch(e){rej(e)}});
-}catch(e2){
-throw new Error((e1&&e1.message)||String(e1)||'decodeAudioData 失败')}}}
-const S={ctx:null,buffer:null,mono:null,peaks:null,peaksW:0,duration:0,sr:0,analysis:null,selected:null,playing:false,mode:'loop',srcNode:null,gain:null,startCtxTime:0,startOffset:0,rafId:null,fileName:'',originalName:'',rawSSM:null,gatedSSM:null,gatedG:null,cen:null,lowR:null,N:0,hopSec:0};
-const drop=$('#drop'),fileInput=$('#file'),statusEl=$('#status'),panel=$('#panel'),nameInput=$('#nameInput'),namerow=$('#namerow');
-drop.addEventListener('dragover',e=>{e.preventDefault();drop.classList.add('over')});
-drop.addEventListener('dragleave',()=>drop.classList.remove('over'));
-drop.addEventListener('drop',e=>{e.preventDefault();drop.classList.remove('over');
-const f=e.dataTransfer.files[0];if(f)prepareFile(f)});
-let lastChangeTime=0;
-fileInput.addEventListener('change',e=>{
-lastChangeTime=Date.now();
-const f=e.target.files&&e.target.files[0];
-if(!f){statusEl.className='status err';
-statusEl.textContent='未获取到文件。请确认是直接点开 HTML 文件（不是预览模式）。';return}
-if(!S.ctx){const AC=window.AudioContext||window.webkitAudioContext;
-if(!AC){statusEl.className='status err';
-statusEl.textContent='浏览器不支持 AudioContext';return}
-try{S.ctx=new AC()}catch(err){statusEl.className='status err';
-statusEl.textContent='AudioContext 创建失败：'+err.message;return}}
-if(S.ctx.state==='suspended'){try{S.ctx.resume()}catch(err){}}
-prepareFile(f)});
-nameInput.addEventListener('input',e=>{
-const newName=(e.target.value||'').trim()||'未命名';
-if(newName===S.fileName)return;
-const oldName=S.fileName;
-if(oldName&&paramMemory[oldName]){
-paramMemory[newName]=paramMemory[oldName];
-delete paramMemory[oldName]}
-if(S.originalName){nameMap[S.originalName]=newName;persistNameMap()}
-S.fileName=newName;
-saveParams(newName);
-if(S.analysis)$('#pTitle').textContent=newName;
-else $('#pTitle').textContent=newName});
-function prepareFile(file){
-stopAll();
-const originalName=file.name.replace(/\.[^.]+$/,'');
-S.originalName=originalName;
-const customName=(nameMap[originalName]||originalName)||'未命名';
-S.fileName=customName;
-nameInput.value=customName;
-namerow.classList.add('on');
-loadParams(customName);
-syncSliders();
-handleFile(file)}
-async function handleFile(file){
-const mb=(file.size/1048576).toFixed(2);
-const ftype=file.type||'未知';
-statusEl.className='status';
-statusEl.textContent='正在解码音频…（'+mb+'MB · '+ftype+'）';
-panel.classList.remove('on');
-try{
-if(!S.ctx){const AC=window.AudioContext||window.webkitAudioContext;S.ctx=new AC()}
-if(S.ctx.state==='suspended'){try{await S.ctx.resume()}catch(err){}}
-const ab=await decodeWithFallback(file,S.ctx);
-S.buffer=ab;S.duration=ab.duration;S.mono=toMono(ab);S.sr=ab.sampleRate;
-statusEl.textContent='正在提取特征（频率加权 Chroma + 质心）…';await yieldUI();
-const feat=computeFeatures(S.mono,ab.sampleRate);
-S.cen=feat.cen;S.lowR=feat.lowR;S.N=feat.n;S.hopSec=feat.hopSec;
-statusEl.textContent='正在构建移调不变相似度矩阵…';await yieldUI();
-S.rawSSM=computeSSM_TI_raw(feat);
-S.gatedSSM=null;S.gatedG=null;
-await runAnalysis(true);
-}catch(err){console.error(err);
-const sizeMB=(file.size/1048576).toFixed(1);
-let hint='';
-if(file.size>30*1048576)hint=' · 文件超过 30MB，iOS 内存可能不足';
-statusEl.className='status err';
-statusEl.textContent='解码失败：'+((err&&err.message)||err)+' · 文件 '+sizeMB+'MB · 类型 '+(file.type||'未知')+hint}}
-async function runAnalysis(verbose){
-if(!S.rawSSM)return;
-if(verbose){statusEl.textContent='正在检测重复段落…';await yieldUI()}
-let ssm;
-const G=CFG.CENTROID_GATE;
-if(G<0.01){ssm=S.rawSSM}
-else if(S.gatedSSM&&S.gatedG!==null&&Math.abs(S.gatedG-G)<0.001){ssm=S.gatedSSM}
-else{ssm=applyGate(S.rawSSM,S.cen,S.N,G,CFG.CENTROID_SCALE);S.gatedSSM=ssm;S.gatedG=G}
-const rep=findRepeats(ssm,S.N,S.hopSec,S.duration,S.mono,S.sr,S.cen,S.lowR);
-if(!rep||!rep.cands.length){
-statusEl.className='status err';
-statusEl.textContent='当前参数下未检测到重复段，可尝试调低相似度阈值或延长最长循环。';
-return}
-S.analysis=rep;
-const sc=c=>CFG.REST_BIAS*c.restScore+(1-CFG.REST_BIAS)*(c.rms/rep.maxRms);
-let best=rep.cands[0];
-for(const c of rep.cands)if(sc(c)>sc(best))best=c;
-S.selected=best;
-renderPanel();
-statusEl.className='status ok';
-statusEl.textContent='分析完成：周期 '+fmt(rep.lag)+' · 候选 '+rep.cands.length+' 段 · 已按休息段优先排序'}
-function reselect(){
-if(!S.analysis)return;
-const rep=S.analysis;
-const sc=c=>CFG.REST_BIAS*c.restScore+(1-CFG.REST_BIAS)*(c.rms/rep.maxRms);
-let best=rep.cands[0];
-for(const c of rep.cands)if(sc(c)>sc(best))best=c;
-S.selected=best;
-renderCands();renderOverlay();
-if(S.playing&&S.mode==='loop')startLoop()}
-function renderPanel(){
-panel.classList.add('on');
-$('#pTitle').textContent=S.fileName||'未命名';
-$('#pMeta').textContent=fmt(S.duration)+' · 重复周期 ≈ '+fmt(S.analysis.lag)+' · 相似度 '+(S.analysis.mean*100).toFixed(0)+'%';
-$('#tTotal').textContent=fmt(S.duration);
-renderCands();renderOverlay();drawWave()}
-function renderCands(){
-const box=$('#cands');
-const sc=c=>CFG.REST_BIAS*c.restScore+(1-CFG.REST_BIAS)*(c.rms/S.analysis.maxRms);
-const sorted=[...S.analysis.cands].sort((a,b)=>sc(b)-sc(a));
-const topRest=sorted[0].restScore;
-box.innerHTML='<h4>候选循环段（休息段优先排序 · 点击切换）</h4>';
-sorted.forEach(c=>{
-const isRest=c.restScore>=topRest*0.9;
-const len=(c.end-c.start).toFixed(1);
-const el=document.createElement('div');
-el.className='cand'+(c===S.selected?' sel':'');
-el.innerHTML='<span class="rng">'+fmt(c.start)+' → '+fmt(c.end)+'</span>'+'<span class="tag'+(isRest?' rest':'')+'">'+(isRest?'♪ 休息段候选':c.tag)+' · '+len+'s</span>';
-el.addEventListener('click',()=>{S.selected=c;renderCands();renderOverlay();
-if(S.playing&&S.mode==='loop')startLoop()});
-box.appendChild(el)});
-$('#pPill').textContent=fmt(S.selected.start)+' → '+fmt(S.selected.end)}
-function renderOverlay(){
-const ov=$('#overlay');
-if(!S.selected){ov.classList.remove('on');return}
-ov.classList.add('on');
-ov.style.left=(S.selected.start/S.duration*100)+'%';
-ov.style.width=((S.selected.end-S.selected.start)/S.duration*100)+'%'}
-const canvas=$('#wave'),wavebox=$('#wavebox'),playheadEl=$('#playhead');
-function computePeaks(width){
-const mono=S.mono,len=mono.length,step=len/width;
-const peaks=new Float32Array(width*2);
-for(let x=0;x<width;x++){
-const s=Math.floor(x*step),e=Math.min(len,Math.floor((x+1)*step));
-let mn=1,mx=-1;
-for(let i=s;i<e;i++){const v=mono[i];if(v<mn)mn=v;if(v>mx)mx=v}
-peaks[x*2]=mn;peaks[x*2+1]=mx}
-return peaks}
-function drawWave(){
-if(!S.mono)return;
-const dpr=Math.min(window.devicePixelRatio||1,2);
-const W=wavebox.clientWidth,H=wavebox.clientHeight;
-if(W<2||H<2)return;
-canvas.width=W*dpr;canvas.height=H*dpr;
-const ctx=canvas.getContext('2d');
-ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,W,H);
-if(!S.peaks||S.peaksW!==W){S.peaks=computePeaks(W);S.peaksW=W}
-const mid=H/2;
-const grad=ctx.createLinearGradient(0,0,W,0);
-grad.addColorStop(0,'#38bdf8');grad.addColorStop(1,'#a855f7');
-ctx.fillStyle=grad;
-for(let x=0;x<W;x++){
-const mn=S.peaks[x*2],mx=S.peaks[x*2+1];
-const y1=mid-mx*mid*0.92,y2=mid-mn*mid*0.92;
-ctx.fillRect(x,y1,1,Math.max(1,y2-y1))}}
-/* ★ 关键修复：播放前必须同步 resume AudioContext */
-function ensureCtxRunning(){
-if(!S.ctx)return;
-if(S.ctx.state!=='running'){
-try{S.ctx.resume()}catch(e){}
-if(S.ctx.state!=='running'){try{S.ctx.resume()}catch(e){}}
-}}
-function stopAll(){
-if(S.srcNode){try{S.srcNode.stop()}catch(e){}try{S.srcNode.disconnect()}catch(e){}S.srcNode=null}
-S.playing=false;if(S.rafId)cancelAnimationFrame(S.rafId);S.rafId=null;
-playheadEl.classList.remove('on');updatePlayBtn()}
-function updatePlayBtn(){
-$('#btnLoop').textContent=(S.playing&&S.mode==='loop')?'❚❚ 暂停循环':'▶ 循环高潮';
-$('#btnFull').textContent=(S.playing&&S.mode==='full')?'❚❚ 暂停全曲':'▶ 播放全曲'}
-function startLoop(){
-if(!S.buffer||!S.selected||!S.ctx)return;
-ensureCtxRunning(); /* ★ */
-stopAll();
-const{start,end}=S.selected;
-const node=S.ctx.createBufferSource(),gain=S.ctx.createGain();
-gain.gain.value=1;node.buffer=S.buffer;node.loop=true;
-node.loopStart=start;node.loopEnd=end;
-node.connect(gain);gain.connect(S.ctx.destination); /* ★ 分开写 */
-const t0=S.ctx.currentTime+0.05;node.start(t0,start);
-S.srcNode=node;S.gain=gain;S.startCtxTime=t0;S.startOffset=start;
-S.playing=true;S.mode='loop';playheadEl.classList.add('on');
-updatePlayBtn();rafLoop();
-setTimeout(()=>{if(S.ctx&&S.ctx.state!=='running'){
-statusEl.className='status warn';
-statusEl.textContent='AudioContext 仍处于 suspended，请检查：① iPhone 侧边静音拨片是否关闭 ② 音量键是否调大 ③ 用 Safari 打开（非微信内置浏览器）'}},900);}
-function startFull(){
-if(!S.buffer||!S.ctx)return;
-ensureCtxRunning(); /* ★ */
-stopAll();
-const node=S.ctx.createBufferSource(),gain=S.ctx.createGain();
-gain.gain.value=1;node.buffer=S.buffer;
-node.connect(gain);gain.connect(S.ctx.destination); /* ★ 分开写 */
-const t0=S.ctx.currentTime+0.05;node.start(t0,0);
-node.onended=()=>{if(S.mode==='full')stopAll()};
-S.srcNode=node;S.gain=gain;S.startCtxTime=t0;S.startOffset=0;
-S.playing=true;S.mode='full';playheadEl.classList.add('on');
-updatePlayBtn();rafLoop();
-setTimeout(()=>{if(S.ctx&&S.ctx.state!=='running'){
-statusEl.className='status warn';
-statusEl.textContent='AudioContext 仍处于 suspended，请检查：① iPhone 侧边静音拨片是否关闭 ② 音量键是否调大 ③ 用 Safari 打开（非微信内置浏览器）'}},900);}
-function rafLoop(){
-if(!S.playing)return;
-let t;
-if(S.mode==='loop'){
-const dur=S.selected.end-S.selected.start;
-const elapsed=S.ctx.currentTime-S.startCtxTime;
-t=S.selected.start+(elapsed%dur+dur)%dur}
-else{t=S.ctx.currentTime-S.startCtxTime+S.startOffset;
-if(t>=S.duration){stopAll();return}}
-playheadEl.style.left=(t/S.duration*100)+'%';
-$('#tNow').textContent=fmt(t);
-S.rafId=requestAnimationFrame(rafLoop)}
-wavebox.addEventListener('click',e=>{
-if(!S.mono)return;
-ensureCtxRunning();
-const r=wavebox.getBoundingClientRect();
-const pct=Math.max(0,Math.min(1,(e.clientX-r.left)/r.width));
-const t=pct*S.duration;
-if(S.mode==='loop'&&S.playing&&S.selected){
-const{start,end}=S.selected;
-if(t>=start&&t<=end){
-stopAll();
-const node=S.ctx.createBufferSource(),gain=S.ctx.createGain();
-node.buffer=S.buffer;node.loop=true;node.loopStart=start;node.loopEnd=end;
-node.connect(gain);gain.connect(S.ctx.destination);
-const t0=S.ctx.currentTime+0.05;node.start(t0,t);
-S.srcNode=node;S.gain=gain;S.startCtxTime=t0;S.startOffset=t;
-S.playing=true;S.mode='loop';updatePlayBtn();rafLoop();return}}
-playheadEl.classList.add('on');
-playheadEl.style.left=(pct*100)+'%';
-$('#tNow').textContent=fmt(t)});
-/* 按钮：同步 resume + 播放 */
-$('#btnLoop').addEventListener('click',()=>{
-ensureCtxRunning();
-if(S.playing&&S.mode==='loop')stopAll();else startLoop()});
-$('#btnFull').addEventListener('click',()=>{
-ensureCtxRunning();
-if(S.playing&&S.mode==='full')stopAll();else startFull()});
-$('#btnStop').addEventListener('click',stopAll);
-document.addEventListener('keydown',e=>{
-if(e.target.matches('input,textarea'))return;
-if(e.code==='Space'){e.preventDefault();
-ensureCtxRunning();
-if(S.playing)stopAll();else startLoop()}});
-let debounceTimer=null;
-function scheduleReanalysis(){
-clearTimeout(debounceTimer);
-debounceTimer=setTimeout(()=>runAnalysis(false),280)}
-function syncSliders(){
-$('#pRest').value=CFG.REST_BIAS;$('#vRest').textContent=CFG.REST_BIAS.toFixed(2);
-$('#pGate').value=CFG.CENTROID_GATE;$('#vGate').textContent=CFG.CENTROID_GATE.toFixed(2);
-$('#pSim').value=CFG.MIN_SIM;$('#vSim').textContent=CFG.MIN_SIM.toFixed(2);
-$('#pMin').value=CFG.MIN_LOOP;$('#vMin').textContent=CFG.MIN_LOOP+'s';
-$('#pMax').value=CFG.MAX_LOOP;$('#vMax').textContent=CFG.MAX_LOOP+'s'}
-$('#pRest').addEventListener('input',e=>{
-CFG.REST_BIAS=parseFloat(e.target.value);
-$('#vRest').textContent=CFG.REST_BIAS.toFixed(2);
-saveParams(S.fileName);reselect()});
-$('#pGate').addEventListener('input',e=>{
-CFG.CENTROID_GATE=parseFloat(e.target.value);
-$('#vGate').textContent=CFG.CENTROID_GATE.toFixed(2);
-saveParams(S.fileName);scheduleReanalysis()});
-$('#pSim').addEventListener('input',e=>{
-CFG.MIN_SIM=parseFloat(e.target.value);
-$('#vSim').textContent=CFG.MIN_SIM.toFixed(2);
-saveParams(S.fileName);scheduleReanalysis()});
-$('#pMin').addEventListener('input',e=>{
-CFG.MIN_LOOP=parseInt(e.target.value,10);
-$('#vMin').textContent=CFG.MIN_LOOP+'s';
-saveParams(S.fileName);scheduleReanalysis()});
-$('#pMax').addEventListener('input',e=>{
-CFG.MAX_LOOP=parseInt(e.target.value,10);
-$('#vMax').textContent=CFG.MAX_LOOP+'s';
-saveParams(S.fileName);scheduleReanalysis()});
-if(window.ResizeObserver){
-new ResizeObserver(()=>{S.peaks=null;drawWave()}).observe(wavebox)}
-else window.addEventListener('resize',()=>{S.peaks=null;drawWave()});
+(() => {
+'use strict';
+const $ = s => document.querySelector(s);
+
+/* ============================================================
+   配置
+   ============================================================ */
+const CFG = {
+  FMIN: 30,
+  FMAX: 8000,
+  HOP_SEC: 0.10,
+  FRAME_SEC: 0.20,
+  NOVELTY_K: 20,
+  MIN_SEG: 8,
+  MAX_SEG: 60,
+  SIM_THRESHOLD: 0.78,
+  BOUNDARY_SENS: 0.28,
+  WEIGHT_PITCH: 0.5,
+  BAND_EDGES: [62, 125, 250, 500, 1000, 2000, 4000, 8000],
+  ONSET_HOP_SEC: 0.01
+};
+const DEF = {
+  MIN_SEG: 8, MAX_SEG: 60,
+  SIM_THRESHOLD: 0.78,
+  BOUNDARY_SENS: 0.28,
+  WEIGHT_PITCH: 0.5
+};
+
+/* ============================================================
+   工具
+   ============================================================ */
+const fmt = t => {
+  t = Math.max(0, t || 0);
+  return Math.floor(t / 60) + ':' + String(Math.floor(t % 60)).padStart(2, '0');
+};
+const yieldUI = () => new Promise(r => setTimeout(r, 0));
+
+try {
+  if (navigator.audioSession && navigator.audioSession.type !== 'playback') {
+    navigator.audioSession.type = 'playback';
+  }
+} catch (e) {}
+
+(function () {
+  const ua = navigator.userAgent;
+  const isSafari = /^((?!chrome|android).)*safari/i.test(ua);
+  const isIOS = /iPad|iPhone|iPod/.test(ua);
+  const hasAC = !!(window.AudioContext || window.webkitAudioContext);
+  const hasSession = !!navigator.audioSession;
+  const lines = [];
+  if (isIOS) lines.push('iOS');
+  if (isSafari) lines.push('Safari'); else if (/chrome/i.test(ua)) lines.push('Chrome');
+  lines.push(hasAC ? 'AC✓' : 'AC✗');
+  lines.push(hasSession ? 'AS✓' : 'AS✗');
+  $('#env').textContent = lines.join(' · ');
 })();
-</script></body></html>
+
+/* ============================================================
+   FFT（迭代 radix-2，原地）
+   ============================================================ */
+function fft(re, im) {
+  const n = re.length;
+  for (let i = 1, j = 0; i < n; i++) {
+    let bit = n >> 1;
+    for (; j & bit; bit >>= 1) j ^= bit;
+    j ^= bit;
+    if (i < j) {
+      let t = re[i]; re[i] = re[j]; re[j] = t;
+      t = im[i]; im[i] = im[j]; im[j] = t;
+    }
+  }
+  for (let len = 2; len <= n; len <<= 1) {
+    const ang = -2 * Math.PI / len;
+    const wR = Math.cos(ang), wI = Math.sin(ang);
+    for (let i = 0; i < n; i += len) {
+      let cR = 1, cI = 0;
+      for (let j = 0; j < len / 2; j++) {
+        const uR = re[i + j], uI = im[i + j];
+        const vR = re[i + j + len/2] * cR - im[i + j + len/2] * cI;
+        const vI = re[i + j + len/2] * cI + im[i + j + len/2] * cR;
+        re[i + j] = uR + vR; im[i + j] = uI + vI;
+        re[i + j + len/2] = uR - vR; im[i + j + len/2] = uI - vI;
+        const nR = cR * wR - cI * wI;
+        cI = cR * wI + cI * wR; cR = nR;
+      }
+    }
+  }
+}
+
+/* ============================================================
+   立体声 → 单声道
+   ============================================================ */
+function toMono(buf) {
+  const n = buf.numberOfChannels, L = buf.length;
+  if (n === 1) return buf.getChannelData(0).slice();
+  const out = new Float32Array(L);
+  for (let c = 0; c < n; c++) {
+    const d = buf.getChannelData(c);
+    for (let i = 0; i < L; i++) out[i] += d[i];
+  }
+  const g = 1 / n;
+  for (let i = 0; i < L; i++) out[i] *= g;
+  return out;
+}
+
+/* ============================================================
+   特征提取：Chroma（12）+ 频谱对比度（7）+ RMS
+   ============================================================ */
+function extractFeatures(mono, sr) {
+  const hop = Math.round(CFG.HOP_SEC * sr);
+  const fsz = 1 << Math.ceil(Math.log2(CFG.FRAME_SEC * sr));
+  const half = fsz >> 1;
+  const N = Math.max(1, Math.floor((mono.length - fsz) / hop) + 1);
+
+  const win = new Float32Array(fsz);
+  for (let i = 0; i < fsz; i++) {
+    win[i] = 0.5 - 0.5 * Math.cos(2 * Math.PI * i / (fsz - 1));
+  }
+
+  // bin → chroma index (0-11)，超范围 = -1
+  const binC = new Int8Array(half).fill(-1);
+  const binW = new Float32Array(half);
+  for (let i = 1; i < half; i++) {
+    const f = i * sr / fsz;
+    if (f < CFG.FMIN || f > CFG.FMAX) continue;
+    binC[i] = ((Math.round(69 + 12 * Math.log2(f / 440)) % 12) + 12) % 12;
+    // 频率权重：抑制极低频和极高频，但比之前宽松，保留更多细节
+    let w = 1;
+    if (f < 80) w = 0.15;
+    else if (f < 150) w = 0.35;
+    else if (f < 300) w = 0.7;
+    else if (f > 6000) w = 0.6;
+    binW[i] = w;
+  }
+
+  // 频带边界（FFT bin）
+  const bandEdges = CFG.BAND_EDGES.map(f => Math.round(f * fsz / sr));
+
+  const chroma = new Float32Array(N * 12);
+  const contrast = new Float32Array(N * 7);
+  const rms = new Float32Array(N);
+  const re = new Float32Array(fsz), im = new Float32Array(fsz);
+  const mag = new Float32Array(half);
+
+  for (let t = 0; t < N; t++) {
+    const off = t * hop;
+    for (let i = 0; i < fsz; i++) {
+      re[i] = mono[off + i] * win[i];
+      im[i] = 0;
+    }
+    fft(re, im);
+
+    let sum2 = 0;
+    for (let i = 1; i < half; i++) {
+      const m = Math.sqrt(re[i] * re[i] + im[i] * im[i]);
+      mag[i] = m;
+      sum2 += m * m;
+    }
+    rms[t] = Math.sqrt(sum2 / half);
+
+    const base = t * 12;
+    for (let i = 1; i < half; i++) {
+      const c = binC[i];
+      if (c < 0) continue;
+      chroma[base + c] += mag[i] * binW[i];
+    }
+    let nrm = 0;
+    for (let k = 0; k < 12; k++) nrm += chroma[base + k] * chroma[base + k];
+    nrm = Math.sqrt(nrm) || 1;
+    for (let k = 0; k < 12; k++) chroma[base + k] /= nrm;
+
+    // 频谱对比度（每频带：峰值 / 均值，log 归一化）
+    const cbase = t * 7;
+    for (let b = 0; b < 7; b++) {
+      const a = Math.max(1, bandEdges[b]);
+      const e = Math.min(half, bandEdges[b + 1]);
+      if (e <= a) { contrast[cbase + b] = 0; continue; }
+      let sum = 0, mx = 0, cnt = 0;
+      for (let i = a; i < e; i++) {
+        const m = mag[i];
+        sum += m;
+        if (m > mx) mx = m;
+        cnt++;
+      }
+      const mean = cnt ? sum / cnt : 1e-6;
+      // log2(峰值/均值 + 1) 作为对比度
+      contrast[cbase + b] = Math.log2(mx / (mean + 1e-6) + 1);
+    }
+    // 帧内归一化
+    let mx2 = 0;
+    for (let b = 0; b < 7; b++) if (contrast[cbase + b] > mx2) mx2 = contrast[cbase + b];
+    if (mx2 > 0.001) {
+      for (let b = 0; b < 7; b++) contrast[cbase + b] = Math.min(contrast[cbase + b] / mx2, 1);
+    }
+  }
+  return { chroma, contrast, rms, N, hopSec: CFG.HOP_SEC };
+}
+
+/* ============================================================
+   起音包络（10ms 帧率，用于 BPM 估计和边界精修）
+   ============================================================ */
+function computeOnsetEnvelope(mono, sr) {
+  const hop = Math.round(CFG.ONSET_HOP_SEC * sr);
+  const winSize = Math.round(0.03 * sr);
+  const N = Math.max(1, Math.floor((mono.length - winSize) / hop) + 1);
+  const env = new Float32Array(N);
+
+  let prev = 0;
+  for (let t = 0; t < N; t++) {
+    const off = t * hop;
+    let s = 0;
+    for (let i = 0; i < winSize; i++) {
+      const d = mono[off + i];
+      s += d * d;
+    }
+    const cur = Math.sqrt(s / winSize);
+    env[t] = Math.max(0, cur - prev);
+    prev = cur;
+  }
+  // 平滑
+  const sm = new Float32Array(N);
+  for (let i = 2; i < N - 2; i++) {
+    sm[i] = (env[i-2] + env[i-1] + env[i] + env[i+1] + env[i+2]) / 5;
+  }
+  return { env: sm, hopSec: CFG.ONSET_HOP_SEC, N };
+}
+
+/* ============================================================
+   帧相似度（移调不变 chroma + 对比度）
+   ============================================================ */
+function frameSim(chroma, contrast, i, j) {
+  const bi = i * 12, bj = j * 12;
+  // 12 种半音旋转取最大
+  let best = 0;
+  for (let sh = 0; sh < 12; sh++) {
+    let s = 0;
+    for (let k = 0; k < 12; k++) {
+      s += chroma[bi + k] * chroma[bj + ((k + sh) % 12)];
+    }
+    if (s > best) best = s;
+  }
+  const ci = i * 7, cj = j * 7;
+  let cSim = 0;
+  for (let k = 0; k < 7; k++) cSim += contrast[ci + k] * contrast[cj + k];
+  return 0.6 * best + 0.4 * cSim;
+}
+
+/* ============================================================
+   Novelty：checkerboard kernel 检测内容突变
+   ============================================================ */
+function computeNovelty(chroma, contrast, N, K) {
+  const nov = new Float32Array(N);
+  for (let t = K; t < N - K; t++) {
+    // in-left × in-left
+    let inSum = 0, inCnt = 0;
+    for (let i = t - K; i < t; i++) {
+      for (let j = i + 1; j < t; j++) {
+        inSum += frameSim(chroma, contrast, i, j);
+        inCnt++;
+      }
+    }
+    // in-right × in-right
+    let outSum = 0, outCnt = 0;
+    for (let i = t; i < t + K; i++) {
+      for (let j = i + 1; j < t + K; j++) {
+        outSum += frameSim(chroma, contrast, i, j);
+        outCnt++;
+      }
+    }
+    // cross
+    let crossSum = 0, crossCnt = 0;
+    for (let i = t - K; i < t; i++) {
+      for (let j = t; j < t + K; j++) {
+        crossSum += frameSim(chroma, contrast, i, j);
+        crossCnt++;
+      }
+    }
+    const a = inCnt ? inSum / inCnt : 0;
+    const b = outCnt ? outSum / outCnt : 0;
+    const c = crossCnt ? crossSum / crossCnt : 0;
+    nov[t] = (a + b) / 2 - c;
+  }
+  return nov;
+}
+
+/* ============================================================
+   峰值拾取 + 边界吸附到起音
+   ============================================================ */
+function findBoundaryPeaks(nov, N, minFrames, sensitivity) {
+  // 平滑
+  const sm = new Float32Array(N);
+  const sw = 4;
+  for (let i = 0; i < N; i++) {
+    let s = 0, c = 0;
+    for (let j = Math.max(0, i - sw); j <= Math.min(N - 1, i + sw); j++) {
+      s += nov[j]; c++;
+    }
+    sm[i] = s / c;
+  }
+  let mx = 0;
+  for (let i = 0; i < N; i++) if (sm[i] > mx) mx = sm[i];
+  const th = mx * sensitivity;
+  if (th <= 0) return [0, N];
+  const peaks = [];
+  for (let i = 1; i < N - 1; i++) {
+    if (sm[i] > sm[i-1] && sm[i] >= sm[i+1] && sm[i] > th) {
+      peaks.push(i);
+    }
+  }
+  const filtered = [];
+  for (const p of peaks) {
+    if (filtered.length === 0 || p - filtered[filtered.length - 1] >= minFrames) {
+      filtered.push(p);
+    }
+  }
+  return [0, ...filtered, N];
+}
+
+function snapBoundariesToOnsets(boundaries, onsetEnv, onsetHop, featHop, N) {
+  const snapped = [0];
+  for (let i = 1; i < boundaries.length - 1; i++) {
+    const bf = boundaries[i];
+    const tSec = bf * featHop;
+    // 在 ±0.25 秒范围内找最强起音
+    const win = Math.round(0.25 / onsetHop);
+    const center = Math.round(tSec / onsetHop);
+    const a = Math.max(1, center - win);
+    const b = Math.min(onsetEnv.length - 2, center + win);
+    let bestIdx = -1, bestVal = 0;
+    for (let j = a; j <= b; j++) {
+      if (onsetEnv[j] > bestVal) {
+        bestVal = onsetEnv[j];
+        bestIdx = j;
+      }
+    }
+    if (bestIdx > 0 && bestVal > 0) {
+      // 转为特征帧索引
+      const tSnap = bestIdx * onsetHop;
+      const fSnap = Math.round(tSnap / featHop);
+      if (fSnap > snapped[snapped.length - 1] + 2 && fSnap < N - 2) {
+        snapped.push(fSnap);
+      } else {
+        snapped.push(bf);
+      }
+    } else {
+      snapped.push(bf);
+    }
+  }
+  snapped.push(N);
+  return snapped;
+}
+
+/* ============================================================
+   段落特征
+   ============================================================ */
+function buildSegments(chroma, contrast, rms, boundaries, hop, sr, mono) {
+  const segs = [];
+  for (let k = 0; k < boundaries.length - 1; k++) {
+    const a = boundaries[k], b = boundaries[k + 1];
+    const nFrames = b - a;
+    if (nFrames < 2) continue;
+
+    const featP = new Float32Array(12);
+    const featT = new Float32Array(7);
+    let rmsSum = 0;
+
+    for (let t = a; t < b; t++) {
+      const bp = t * 12, bt = t * 7;
+      for (let j = 0; j < 12; j++) featP[j] += chroma[bp + j];
+      for (let j = 0; j < 7; j++) featT[j] += contrast[bt + j];
+      rmsSum += rms[t];
+    }
+    // 归一化
+    let nP = 0;
+    for (let j = 0; j < 12; j++) nP += featP[j] * featP[j];
+    nP = Math.sqrt(nP) || 1;
+    for (let j = 0; j < 12; j++) featP[j] /= nP;
+
+    let nT = 0;
+    for (let j = 0; j < 7; j++) nT += featT[j] * featT[j];
+    nT = Math.sqrt(nT) || 1;
+    for (let j = 0; j < 7; j++) featT[j] /= nT;
+
+    const startSec = a * hop;
+    const endSec = b * hop;
+    const dur = endSec - startSec;
+    const avgRms = rmsSum / nFrames;
+
+    segs.push({
+      idx: k,
+      startFrame: a,
+      endFrame: b,
+      startSec, endSec, dur,
+      featP, featT, avgRms
+    });
+  }
+  return segs;
+}
+
+/* ============================================================
+   段落匹配
+   ============================================================ */
+function tiPitchSim(a, b) {
+  let best = 0;
+  for (let sh = 0; sh < 12; sh++) {
+    let s = 0;
+    for (let k = 0; k < 12; k++) s += a[k] * b[(k + sh) % 12];
+    if (s > best) best = s;
+  }
+  return best;
+}
+
+function timbreSim(a, b) {
+  let s = 0;
+  for (let k = 0; k < 7; k++) s += a[k] * b[k];
+  return s;
+}
+
+function matchSegments(segs, minSec, maxSec, minSim, wPitch) {
+  const pairs = [];
+  for (let i = 0; i < segs.length; i++) {
+    const si = segs[i];
+    if (si.dur < minSec || si.dur > maxSec) continue;
+    for (let j = i + 1; j < segs.length; j++) {
+      const sj = segs[j];
+      if (sj.dur < minSec || sj.dur > maxSec) continue;
+      const durRatio = Math.min(si.dur, sj.dur) / Math.max(si.dur, sj.dur);
+      if (durRatio < 0.55) continue;
+
+      const pitch = tiPitchSim(si.featP, sj.featP);
+      const timbre = timbreSim(si.featT, sj.featT);
+      const durS = durRatio;
+      // 加权组合
+      const sim = wPitch * pitch + (1 - wPitch) * (0.7 * timbre + 0.3 * durS);
+
+      if (sim >= minSim) {
+        pairs.push({
+          i, j, sim, pitch, timbre, dur: durS,
+          A: si, B: sj
+        });
+      }
+    }
+  }
+  pairs.sort((a, b) => b.sim - a.sim);
+  return pairs;
+}
+
+/* ============================================================
+   状态
+   ============================================================ */
+const S = {
+  ctx: null,
+  buffer: null,
+  mono: null,
+  sr: 0,
+  duration: 0,
+  // 特征
+  chroma: null,
+  contrast: null,
+  rms: null,
+  N: 0,
+  hopSec: 0,
+  // 起音
+  onsetEnv: null,
+  onsetHopSec: 0,
+  // 结构
+  novelty: null,
+  boundaries: null,
+  originalBoundaries: null,
+  segments: null,
+  pairs: null,
+  selectedPairIdx: -1,
+  selectedSegIdx: -1,
+  // 播放
+  playing: false,
+  mode: 'A',
+  srcNode: null,
+  gainNode: null,
+  startCtxTime: 0,
+  startOffset: 0,
+  endOffset: 0,
+  rafId: null,
+  // 渲染
+  peaks: null,
+  peaksW: 0,
+  peaksH: 0,
+  // 元数据
+  fileName: '',
+  originalName: '',
+  // 交互
+  draggingBoundary: -1,
+  dragOffsetPx: 0
+};
+
+/* ============================================================
+   参数记忆
+   ============================================================ */
+const paramMemory = {};
+const nameMap = (() => {
+  try { return JSON.parse(localStorage.getItem('loop-names-pro') || '{}'); }
+  catch (e) { return {}; }
+})();
+function persistNameMap() {
+  try { localStorage.setItem('loop-names-pro', JSON.stringify(nameMap)); } catch (e) {}
+}
+function loadParams(name) {
+  const s = paramMemory[name];
+  if (s) {
+    CFG.MIN_SEG = s.MIN_SEG;
+    CFG.MAX_SEG = s.MAX_SEG;
+    CFG.SIM_THRESHOLD = s.SIM_THRESHOLD;
+    CFG.BOUNDARY_SENS = s.BOUNDARY_SENS;
+    CFG.WEIGHT_PITCH = s.WEIGHT_PITCH;
+  } else {
+    Object.assign(CFG, DEF);
+  }
+}
+function saveParams(name) {
+  paramMemory[name] = {
+    MIN_SEG: CFG.MIN_SEG,
+    MAX_SEG: CFG.MAX_SEG,
+    SIM_THRESHOLD: CFG.SIM_THRESHOLD,
+    BOUNDARY_SENS: CFG.BOUNDARY_SENS,
+    WEIGHT_PITCH: CFG.WEIGHT_PITCH
+  };
+}
+
+/* ============================================================
+   DOM 引用
+   ============================================================ */
+const drop = $('#drop'), fileInput = $('#file'), statusEl = $('#status'), panel = $('#panel');
+const nameInput = $('#nameInput'), namerow = $('#namerow');
+const canvas = $('#wave'), wavebox = $('#wavebox'), playheadEl = $('#playhead');
+
+/* ============================================================
+   文件导入
+   ============================================================ */
+drop.addEventListener('dragover', e => { e.preventDefault(); drop.classList.add('over'); });
+drop.addEventListener('dragleave', () => drop.classList.remove('over'));
+drop.addEventListener('drop', e => {
+  e.preventDefault(); drop.classList.remove('over');
+  const f = e.dataTransfer.files[0];
+  if (f) prepareFile(f);
+});
+fileInput.addEventListener('change', e => {
+  const f = e.target.files && e.target.files[0];
+  if (!f) { statusEl.className = 'status err'; statusEl.textContent = '未获取到文件'; return; }
+  if (!S.ctx) {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) { statusEl.className = 'status err'; statusEl.textContent = '浏览器不支持 AudioContext'; return; }
+    try { S.ctx = new AC(); } catch (err) {
+      statusEl.className = 'status err'; statusEl.textContent = 'AudioContext 创建失败：' + err.message; return;
+    }
+  }
+  if (S.ctx.state === 'suspended') { try { S.ctx.resume(); } catch (err) {} }
+  prepareFile(f);
+});
+
+nameInput.addEventListener('input', e => {
+  const newName = (e.target.value || '').trim() || '未命名';
+  if (newName === S.fileName) return;
+  const oldName = S.fileName;
+  if (oldName && paramMemory[oldName]) {
+    paramMemory[newName] = paramMemory[oldName];
+    delete paramMemory[oldName];
+  }
+  if (S.originalName) {
+    nameMap[S.originalName] = newName;
+    persistNameMap();
+  }
+  S.fileName = newName;
+  saveParams(newName);
+  if (S.segments) $('#pTitle').textContent = newName;
+});
+
+function prepareFile(file) {
+  stopPlay();
+  S.fileName = '';
+  S.originalName = file.name.replace(/\.[^.]+$/, '');
+  const customName = (nameMap[S.originalName] || S.originalName) || '未命名';
+  S.fileName = customName;
+  nameInput.value = customName;
+  namerow.classList.add('on');
+  loadParams(customName);
+  syncSliders();
+  analyzeFile(file);
+}
+
+async function readFileAsArrayBuffer(file) {
+  return new Promise((res, rej) => {
+    const reader = new FileReader();
+    reader.onload = () => res(reader.result);
+    reader.onerror = () => rej(new Error('读取文件失败：' + (reader.error && reader.error.message || '未知')));
+    try { reader.readAsArrayBuffer(file); } catch (e) { rej(e); }
+  });
+}
+
+async function decodeWithFallback(file, ctx) {
+  const buf = await readFileAsArrayBuffer(file);
+  try {
+    return await new Promise((res, rej) => {
+      try { ctx.decodeAudioData(buf, res, rej); } catch (e) { rej(e); }
+    });
+  } catch (e1) {
+    try {
+      const OAC = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+      const off = new OAC(2, 44100, 44100);
+      return await new Promise((res, rej) => {
+        try { off.decodeAudioData(buf, res, rej); } catch (e) { rej(e); }
+      });
+    } catch (e2) {
+      throw new Error((e1 && e1.message) || String(e1) || 'decodeAudioData 失败');
+    }
+  }
+}
+
+/* ============================================================
+   分析主流程
+   ============================================================ */
+async function analyzeFile(file) {
+  const mb = (file.size / 1048576).toFixed(2);
+  statusEl.className = 'status';
+  statusEl.textContent = '正在解码音频…（' + mb + 'MB）';
+  panel.classList.remove('on');
+  try {
+    if (!S.ctx) {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      S.ctx = new AC();
+    }
+    if (S.ctx.state === 'suspended') { try { await S.ctx.resume(); } catch (e) {} }
+    const ab = await decodeWithFallback(file, S.ctx);
+    S.buffer = ab;
+    S.sr = ab.sampleRate;
+    S.duration = ab.duration;
+    S.mono = toMono(ab);
+
+    statusEl.textContent = '正在提取音级特征（Chroma）…'; await yieldUI();
+    const feat = extractFeatures(S.mono, S.sr);
+    S.chroma = feat.chroma;
+    S.contrast = feat.contrast;
+    S.rms = feat.rms;
+    S.N = feat.N;
+    S.hopSec = feat.hopSec;
+
+    statusEl.textContent = '正在计算起音包络…'; await yieldUI();
+    const onset = computeOnsetEnvelope(S.mono, S.sr);
+    S.onsetEnv = onset.env;
+    S.onsetHopSec = onset.hopSec;
+
+    statusEl.textContent = '正在做结构分析（Novelty）…（可能需要 10-30 秒）';
+    await yieldUI();
+    S.novelty = computeNovelty(S.chroma, S.contrast, S.N, CFG.NOVELTY_K);
+
+    await runStructure();
+  } catch (err) {
+    console.error(err);
+    statusEl.className = 'status err';
+    statusEl.textContent = '分析失败：' + ((err && err.message) || err);
+  }
+}
+
+async function runStructure() {
+  if (!S.novelty) return;
+  const minFrames = Math.round(CFG.MIN_SEG / S.hopSec);
+  let bounds = findBoundaryPeaks(S.novelty, S.N, minFrames, CFG.BOUNDARY_SENS);
+  // 吸附到起音
+  bounds = snapBoundariesToOnsets(bounds, S.onsetEnv, S.onsetHopSec, S.hopSec, S.N);
+  // 保存原始边界（重置时恢复）
+  if (!S.originalBoundaries || S.originalBoundaries.length < 2) {
+    S.originalBoundaries = bounds.slice();
+  }
+  S.boundaries = bounds;
+
+  // 构建段落
+  S.segments = buildSegments(
+    S.chroma, S.contrast, S.rms, S.boundaries,
+    S.hopSec, S.sr, S.mono
+  );
+
+  // 匹配
+  S.pairs = matchSegments(
+    S.segments, CFG.MIN_SEG, CFG.MAX_SEG,
+    CFG.SIM_THRESHOLD, CFG.WEIGHT_PITCH
+  );
+  S.selectedPairIdx = -1;
+  S.selectedSegIdx = -1;
+
+  renderPanel();
+  renderCands();
+  drawWave();
+
+  if (S.pairs.length > 0) {
+    selectPair(0);
+    statusEl.className = 'status ok';
+    statusEl.textContent = '分析完成：' + (S.boundaries.length - 1) + ' 个段落 · ' + S.pairs.length + ' 个匹配对';
+  } else {
+    statusEl.className = 'status err';
+    statusEl.textContent = '未找到相似段对。可调低相似度、调高边界灵敏度、或调整音高比重后重试。';
+  }
+}
+
+/* ============================================================
+   重算（参数改变或边界拖拽后）
+   ============================================================ */
+async function recomputeAll() {
+  if (!S.chroma) return;
+  S.segments = buildSegments(S.chroma, S.contrast, S.rms, S.boundaries, S.hopSec, S.sr, S.mono);
+  S.pairs = matchSegments(S.segments, CFG.MIN_SEG, CFG.MAX_SEG, CFG.SIM_THRESHOLD, CFG.WEIGHT_PITCH);
+  if (S.pairs.length > 0) {
+    selectPair(Math.min(S.selectedPairIdx < 0 ? 0 : S.selectedPairIdx, S.pairs.length - 1));
+  } else {
+    S.selectedPairIdx = -1;
+    renderCands();
+    drawWave();
+  }
+}
+
+async function redoBoundaries() {
+  if (!S.novelty) return;
+  const minFrames = Math.round(CFG.MIN_SEG / S.hopSec);
+  let bounds = findBoundaryPeaks(S.novelty, S.N, minFrames, CFG.BOUNDARY_SENS);
+  bounds = snapBoundariesToOnsets(bounds, S.onsetEnv, S.onsetHopSec, S.hopSec, S.N);
+  S.boundaries = bounds;
+  S.originalBoundaries = bounds.slice();
+  await recomputeAll();
+}
+
+/* ============================================================
+   面板渲染
+   ============================================================ */
+function renderPanel() {
+  panel.classList.add('on');
+  $('#pTitle').textContent = S.fileName || '未命名';
+  $('#pMeta').textContent =
+    fmt(S.duration) + ' · ' + (S.boundaries.length - 1) + ' 段 · ' +
+    (S.pairs ? S.pairs.length : 0) + ' 匹配对';
+  $('#tTotal').textContent = fmt(S.duration);
+}
+
+function renderCands() {
+  const box = $('#cands');
+  if (!S.pairs || S.pairs.length === 0) {
+    box.innerHTML = '';
+    return;
+  }
+  const maxShow = Math.min(S.pairs.length, 40);
+  box.innerHTML = '<h4>候选段对（按相似度排序 · 点一下循环 A，点两下循环 B）</h4>';
+  for (let k = 0; k < maxShow; k++) {
+    const p = S.pairs[k];
+    const el = document.createElement('div');
+    el.className = 'cand' + (k === S.selectedPairIdx ? ' sel' : '');
+    el.innerHTML =
+      '<div class="pair">' +
+        '<span class="pa">A · ' + fmt(p.A.startSec) + ' → ' + fmt(p.A.endSec) + ' (' + p.A.dur.toFixed(1) + 's)</span>' +
+        '<span class="pb">B · ' + fmt(p.B.startSec) + ' → ' + fmt(p.B.endSec) + ' (' + p.B.dur.toFixed(1) + 's)</span>' +
+      '</div>' +
+      '<span class="sim' + (p.sim > 0.9 ? ' hi' : '') + '">' + (p.sim * 100).toFixed(0) + '%</span>';
+    el.addEventListener('click', () => selectPair(k));
+    box.appendChild(el);
+  }
+}
+
+function selectPair(idx) {
+  if (!S.pairs || idx < 0 || idx >= S.pairs.length) return;
+  S.selectedPairIdx = idx;
+  const p = S.pairs[idx];
+  S.selectedSegIdx = p.i;
+  renderCands();
+  drawWave();
+  updateSegInfo();
+  $('#pPill').textContent = fmt(p.A.startSec) + ' → ' + fmt(p.A.endSec) + ' / ' + fmt(p.B.startSec) + ' → ' + fmt(p.B.endSec);
+  if (S.playing) stopPlay();
+}
+
+function updateSegInfo() {
+  const el = $('#segInfo');
+  if (S.selectedPairIdx >= 0 && S.pairs) {
+    const p = S.pairs[S.selectedPairIdx];
+    el.innerHTML = '已选：<b>A 段</b> ' + fmt(p.A.startSec) + ' → ' + fmt(p.A.endSec) +
+      ' · <b>B 段</b> ' + fmt(p.B.startSec) + ' → ' + fmt(p.B.endSec) +
+      ' · 相似度 ' + (p.sim * 100).toFixed(1) + '%' +
+      ' (音高 ' + (p.pitch * 100).toFixed(0) + '% / 音色 ' + (p.timbre * 100).toFixed(0) + '%)';
+  } else if (S.selectedSegIdx >= 0 && S.segments && S.segments[S.selectedSegIdx]) {
+    const s = S.segments[S.selectedSegIdx];
+    el.innerHTML = '已选段 #' + S.selectedSegIdx + '：' + fmt(s.startSec) + ' → ' + fmt(s.endSec) + ' (' + s.dur.toFixed(1) + 's)';
+  } else {
+    el.textContent = '点波形选段 · 拖边界手柄微调 · 点下方列表选段对';
+  }
+}
+
+/* ============================================================
+   波形绘制
+   ============================================================ */
+function computePeaks(width) {
+  const mono = S.mono, len = mono.length, step = len / width;
+  const peaks = new Float32Array(width * 2);
+  for (let x = 0; x < width; x++) {
+    const s = Math.floor(x * step);
+    const e = Math.min(len, Math.floor((x + 1) * step));
+    let mn = 1, mx = -1;
+    for (let i = s; i < e; i++) {
+      const v = mono[i];
+      if (v < mn) mn = v;
+      if (v > mx) mx = v;
+    }
+    peaks[x * 2] = mn;
+    peaks[x * 2 + 1] = mx;
+  }
+  return peaks;
+}
+
+function drawWave() {
+  if (!S.mono) return;
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const W = wavebox.clientWidth;
+  const H = wavebox.clientHeight;
+  if (W < 2 || H < 2) return;
+  canvas.width = W * dpr;
+  canvas.height = H * dpr;
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, W, H);
+
+  // 背景
+  ctx.fillStyle = 'rgba(255,255,255,0.02)';
+  ctx.fillRect(0, 0, W, H);
+
+  if (!S.peaks || S.peaksW !== W || S.peaksH !== H) {
+    S.peaks = computePeaks(W);
+    S.peaksW = W;
+    S.peaksH = H;
+  }
+
+  // 高亮选中段对
+  if (S.selectedPairIdx >= 0 && S.pairs) {
+    const p = S.pairs[S.selectedPairIdx];
+    const ax1 = p.A.startSec / S.duration * W;
+    const ax2 = p.A.endSec / S.duration * W;
+    const bx1 = p.B.startSec / S.duration * W;
+    const bx2 = p.B.endSec / S.duration * W;
+    ctx.fillStyle = 'rgba(56,189,248,0.18)';
+    ctx.fillRect(ax1, 0, ax2 - ax1, H);
+    ctx.fillStyle = 'rgba(168,85,247,0.18)';
+    ctx.fillRect(bx1, 0, bx2 - bx1, H);
+  } else if (S.selectedSegIdx >= 0 && S.segments && S.segments[S.selectedSegIdx]) {
+    const s = S.segments[S.selectedSegIdx];
+    const x1 = s.startSec / S.duration * W;
+    const x2 = s.endSec / S.duration * W;
+    ctx.fillStyle = 'rgba(56,189,248,0.15)';
+    ctx.fillRect(x1, 0, x2 - x1, H);
+  }
+
+  // 波形
+  const mid = H / 2;
+  const grad = ctx.createLinearGradient(0, 0, W, 0);
+  grad.addColorStop(0, '#38bdf8');
+  grad.addColorStop(1, '#a855f7');
+  ctx.fillStyle = grad;
+  for (let x = 0; x < W; x++) {
+    const mn = S.peaks[x * 2], mx = S.peaks[x * 2 + 1];
+    const y1 = mid - mx * mid * 0.9;
+    const y2 = mid - mn * mid * 0.9;
+    ctx.fillRect(x, y1, 1, Math.max(1, y2 - y1));
+  }
+
+  // 段落边界线
+  if (S.boundaries && S.boundaries.length > 2) {
+    ctx.strokeStyle = 'rgba(255,255,255,0.35)';
+    ctx.lineWidth = 1;
+    for (let i = 1; i < S.boundaries.length - 1; i++) {
+      const x = S.boundaries[i] / S.N * W;
+      ctx.beginPath();
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, H);
+      ctx.stroke();
+      // 顶部手柄
+      ctx.fillStyle = '#fff';
+      ctx.beginPath();
+      ctx.arc(x, 8, 4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = 'rgba(0,0,0,0.6)';
+      ctx.beginPath();
+      ctx.arc(x, 8, 2, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  // 选中段对边界加粗
+  if (S.selectedPairIdx >= 0 && S.pairs) {
+    const p = S.pairs[S.selectedPairIdx];
+    const marks = [
+      [p.A.startSec / S.duration * W, '#38bdf8'],
+      [p.A.endSec / S.duration * W, '#38bdf8'],
+      [p.B.startSec / S.duration * W, '#a855f7'],
+      [p.B.endSec / S.duration * W, '#a855f7']
+    ];
+    ctx.lineWidth = 2;
+    for (const [x, color] of marks) {
+      ctx.strokeStyle = color;
+      ctx.beginPath();
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, H);
+      ctx.stroke();
+    }
+  }
+}
+
+/* ============================================================
+   波形交互：点击定位 + 拖拽边界
+   ============================================================ */
+let pointerDownX = 0;
+let pointerDownTime = 0;
+
+wavebox.addEventListener('pointerdown', e => {
+  if (!S.mono) return;
+  e.preventDefault();
+  const rect = wavebox.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  pointerDownX = x;
+  pointerDownTime = Date.now();
+
+  // 检查是否在边界附近
+  const W = rect.width;
+  const hitRadius = 10;
+  let hitIdx = -1;
+  let bestDist = hitRadius;
+  if (S.boundaries) {
+    for (let i = 1; i < S.boundaries.length - 1; i++) {
+      const bx = S.boundaries[i] / S.N * W;
+      const d = Math.abs(bx - x);
+      if (d < bestDist) {
+        bestDist = d;
+        hitIdx = i;
+      }
+    }
+  }
+
+  if (hitIdx > 0) {
+    S.draggingBoundary = hitIdx;
+    wavebox.setPointerCapture(e.pointerId);
+    return;
+  }
+
+  // 否则定位播放头
+  const pct = Math.max(0, Math.min(1, x / W));
+  const t = pct * S.duration;
+  playheadEl.classList.add('on');
+  playheadEl.style.left = (pct * 100) + '%';
+  $('#tNow').textContent = fmt(t);
+
+  // 找该位置所属的段落
+  if (S.segments) {
+    for (let k = 0; k < S.segments.length; k++) {
+      const s = S.segments[k];
+      if (t >= s.startSec && t <= s.endSec) {
+        S.selectedSegIdx = k;
+        // 找与该段相关的匹配对
+        if (S.pairs) {
+          let found = -1;
+          for (let p = 0; p < S.pairs.length; p++) {
+            if (S.pairs[p].i === k || S.pairs[p].j === k) { found = p; break; }
+          }
+          if (found >= 0) {
+            S.selectedPairIdx = found;
+            renderCands();
+          }
+        }
+        drawWave();
+        updateSegInfo();
+        break;
+      }
+    }
+  }
+});
+
+wavebox.addEventListener('pointermove', e => {
+  if (S.draggingBoundary < 0) return;
+  e.preventDefault();
+  const rect = wavebox.getBoundingClientRect();
+  const x = Math.max(0, Math.min(rect.width, e.clientX - rect.left));
+  const t = x / rect.width * S.duration;
+  const newFrame = Math.round(t / S.hopSec);
+  const idx = S.draggingBoundary;
+  const prevFrame = S.boundaries[idx - 1];
+  const nextFrame = S.boundaries[idx + 1];
+  const minGap = Math.round(2 / S.hopSec); // 至少 2 秒
+  const clamped = Math.max(prevFrame + minGap, Math.min(nextFrame - minGap, newFrame));
+  S.boundaries[idx] = clamped;
+  // 重新构建段落（不重匹配，等松手）
+  drawWave();
+});
+
+wavebox.addEventListener('pointerup', async e => {
+  if (S.draggingBoundary >= 0) {
+    S.draggingBoundary = -1;
+    try { wavebox.releasePointerCapture(e.pointerId); } catch (err) {}
+    await recomputeAll();
+    statusEl.className = 'status ok';
+    statusEl.textContent = '边界已调整，重新匹配完成';
+  }
+});
+
+wavebox.addEventListener('pointercancel', () => {
+  if (S.draggingBoundary >= 0) {
+    S.draggingBoundary = -1;
+    recomputeAll();
+  }
+});
+
+/* ============================================================
+   播放
+   ============================================================ */
+function ensureCtxRunning() {
+  if (!S.ctx) return;
+  if (S.ctx.state !== 'running') {
+    try { S.ctx.resume(); } catch (e) {}
+  }
+  if (S.ctx.state !== 'running') {
+    try { S.ctx.resume(); } catch (e) {}
+  }
+}
+
+function stopPlay() {
+  if (S.srcNode) {
+    try { S.srcNode.stop(); } catch (e) {}
+    try { S.srcNode.disconnect(); } catch (e) {}
+    S.srcNode = null;
+  }
+  S.playing = false;
+  if (S.rafId) cancelAnimationFrame(S.rafId);
+  S.rafId = null;
+  playheadEl.classList.remove('on');
+  updatePlayBtns();
+}
+
+function updatePlayBtns() {
+  $('#btnLoopA').textContent = (S.playing && S.mode === 'A') ? '❚❚ 停止循环' : '▶ 循环 A 段';
+  $('#btnLoopB').textContent = (S.playing && S.mode === 'B') ? '❚❚ 停止循环' : '▶ 循环 B 段';
+}
+
+function startLoop(startSec, endSec, mode) {
+  if (!S.buffer || !S.ctx) return;
+  if (endSec - startSec < 0.5) return;
+  ensureCtxRunning();
+  stopPlay();
+
+  const node = S.ctx.createBufferSource();
+  const gain = S.ctx.createGain();
+  gain.gain.value = 1;
+  node.buffer = S.buffer;
+  node.loop = true;
+  node.loopStart = startSec;
+  node.loopEnd = endSec;
+  node.connect(gain);
+  gain.connect(S.ctx.destination);
+
+  const t0 = S.ctx.currentTime + 0.05;
+  node.start(t0, startSec);
+
+  S.srcNode = node;
+  S.gainNode = gain;
+  S.startCtxTime = t0;
+  S.startOffset = startSec;
+  S.endOffset = endSec;
+  S.playing = true;
+  S.mode = mode;
+
+  playheadEl.classList.add('on');
+  updatePlayBtns();
+  rafLoop();
+
+  setTimeout(() => {
+    if (S.ctx && S.ctx.state !== 'running') {
+      statusEl.className = 'status warn';
+      statusEl.textContent = 'AudioContext 未运行。检查：① 侧边静音拨片 ② 音量 ③ 用 Safari 打开';
+    }
+  }, 900);
+}
+
+function rafLoop() {
+  if (!S.playing) return;
+  const span = S.endOffset - S.startOffset;
+  if (span <= 0) { stopPlay(); return; }
+  const elapsed = S.ctx.currentTime - S.startCtxTime;
+  const t = S.startOffset + (((elapsed % span) + span) % span);
+  playheadEl.style.left = (t / S.duration * 100) + '%';
+  $('#tNow').textContent = fmt(t);
+  S.rafId = requestAnimationFrame(rafLoop);
+}
+
+/* ============================================================
+   按钮
+   ============================================================ */
+$('#btnLoopA').addEventListener('click', () => {
+  ensureCtxRunning();
+  if (S.playing && S.mode === 'A') { stopPlay(); return; }
+  if (S.selectedPairIdx < 0) { statusEl.className = 'status err'; statusEl.textContent = '请先选一个段对'; return; }
+  const p = S.pairs[S.selectedPairIdx];
+  startLoop(p.A.startSec, p.A.endSec, 'A');
+});
+
+$('#btnLoopB').addEventListener('click', () => {
+  ensureCtxRunning();
+  if (S.playing && S.mode === 'B') { stopPlay(); return; }
+  if (S.selectedPairIdx < 0) { statusEl.className = 'status err'; statusEl.textContent = '请先选一个段对'; return; }
+  const p = S.pairs[S.selectedPairIdx];
+  startLoop(p.B.startSec, p.B.endSec, 'B');
+});
+
+$('#btnStop').addEventListener('click', stopPlay);
+
+$('#btnSplit').addEventListener('click', async () => {
+  if (S.selectedSegIdx < 0 || !S.segments) return;
+  const seg = S.segments[S.selectedSegIdx];
+  // 用播放头位置
+  const curSec = parseFloat($('#tNow').textContent.split(':').reduce((a, b) => a * 60 + parseFloat(b), 0)) || 0;
+  // 用 pointer 位置更简单：从 playhead 百分比
+  const pct = parseFloat(playheadEl.style.left) / 100;
+  const splitSec = pct * S.duration;
+  if (splitSec <= seg.startSec + 1 || splitSec >= seg.endSec - 1) {
+    statusEl.className = 'status err';
+    statusEl.textContent = '播放头不在选中段内，或离边界太近';
+    return;
+  }
+  const splitFrame = Math.round(splitSec / S.hopSec);
+  // 插入新边界
+  const idx = S.boundaries.indexOf(seg.startFrame);
+  if (idx >= 0) {
+    S.boundaries.splice(idx + 1, 0, splitFrame);
+    await recomputeAll();
+    statusEl.className = 'status ok';
+    statusEl.textContent = '已拆分';
+  }
+});
+
+$('#btnMergeL').addEventListener('click', async () => {
+  if (S.selectedSegIdx <= 0 || !S.segments) return;
+  const seg = S.segments[S.selectedSegIdx];
+  const idx = S.boundaries.indexOf(seg.startFrame);
+  if (idx > 0) {
+    S.boundaries.splice(idx, 1);
+    await recomputeAll();
+    S.selectedSegIdx = Math.max(0, S.selected
