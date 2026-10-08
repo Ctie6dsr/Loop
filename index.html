@@ -19,6 +19,9 @@ h1{font-size:23px;font-weight:600;letter-spacing:.5px;margin-bottom:6px;backgrou
 .status{margin-top:12px;font-size:13.5px;color:var(--soft);text-align:center;min-height:20px;line-height:1.6;word-break:break-all}
 .status.err{color:var(--danger)}.status.ok{color:var(--accent)}.status.warn{color:#fbbf24}
 #env{margin-top:6px;font-size:11px;color:#555;text-align:center;font-family:monospace}
+#audiodiag{margin-top:4px;font-size:11px;text-align:center;font-family:monospace;color:#555}
+#audiodiag b{color:var(--accent)}
+#audiodiag .bad{color:var(--danger)}
 .namerow{margin-top:10px;display:none;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap}
 .namerow.on{display:flex}
 .namerow label{font-size:12.5px;color:var(--soft)}
@@ -89,6 +92,7 @@ canvas{display:block;width:100%;height:100%}
 
 <div class="status" id="status"></div>
 <div id="env"></div>
+<div id="audiodiag"></div>
 
 <div class="panel" id="panel">
 <div class="head">
@@ -119,6 +123,7 @@ canvas{display:block;width:100%;height:100%}
 <button class="btn primary" id="btnLoopA">▶ 循环 A 段</button>
 <button class="btn" id="btnLoopB">▶ 循环 B 段</button>
 <button class="btn ghost" id="btnStop">■ 停止</button>
+<button class="btn ghost" id="btnTest">🔊 测试声音</button>
 </div>
 
 <div class="row">
@@ -159,9 +164,6 @@ const DEF = {
   WEIGHT_PITCH: 0.5
 };
 
-/* ============================================================
-   工具
-   ============================================================ */
 const fmt = t => {
   t = Math.max(0, t || 0);
   return Math.floor(t / 60) + ':' + String(Math.floor(t % 60)).padStart(2, '0');
@@ -189,7 +191,7 @@ try {
 })();
 
 /* ============================================================
-   FFT（迭代 radix-2，原地）
+   FFT
    ============================================================ */
 function fft(re, im) {
   const n = re.length;
@@ -220,9 +222,6 @@ function fft(re, im) {
   }
 }
 
-/* ============================================================
-   立体声 → 单声道
-   ============================================================ */
 function toMono(buf) {
   const n = buf.numberOfChannels, L = buf.length;
   if (n === 1) return buf.getChannelData(0).slice();
@@ -237,7 +236,7 @@ function toMono(buf) {
 }
 
 /* ============================================================
-   特征提取：Chroma（12）+ 频谱对比度（7）+ RMS
+   特征提取
    ============================================================ */
 function extractFeatures(mono, sr) {
   const hop = Math.round(CFG.HOP_SEC * sr);
@@ -250,14 +249,12 @@ function extractFeatures(mono, sr) {
     win[i] = 0.5 - 0.5 * Math.cos(2 * Math.PI * i / (fsz - 1));
   }
 
-  // bin → chroma index (0-11)，超范围 = -1
   const binC = new Int8Array(half).fill(-1);
   const binW = new Float32Array(half);
   for (let i = 1; i < half; i++) {
     const f = i * sr / fsz;
     if (f < CFG.FMIN || f > CFG.FMAX) continue;
     binC[i] = ((Math.round(69 + 12 * Math.log2(f / 440)) % 12) + 12) % 12;
-    // 频率权重：抑制极低频和极高频，但比之前宽松，保留更多细节
     let w = 1;
     if (f < 80) w = 0.15;
     else if (f < 150) w = 0.35;
@@ -266,7 +263,6 @@ function extractFeatures(mono, sr) {
     binW[i] = w;
   }
 
-  // 频带边界（FFT bin）
   const bandEdges = CFG.BAND_EDGES.map(f => Math.round(f * fsz / sr));
 
   const chroma = new Float32Array(N * 12);
@@ -302,7 +298,6 @@ function extractFeatures(mono, sr) {
     nrm = Math.sqrt(nrm) || 1;
     for (let k = 0; k < 12; k++) chroma[base + k] /= nrm;
 
-    // 频谱对比度（每频带：峰值 / 均值，log 归一化）
     const cbase = t * 7;
     for (let b = 0; b < 7; b++) {
       const a = Math.max(1, bandEdges[b]);
@@ -316,10 +311,8 @@ function extractFeatures(mono, sr) {
         cnt++;
       }
       const mean = cnt ? sum / cnt : 1e-6;
-      // log2(峰值/均值 + 1) 作为对比度
       contrast[cbase + b] = Math.log2(mx / (mean + 1e-6) + 1);
     }
-    // 帧内归一化
     let mx2 = 0;
     for (let b = 0; b < 7; b++) if (contrast[cbase + b] > mx2) mx2 = contrast[cbase + b];
     if (mx2 > 0.001) {
@@ -329,9 +322,6 @@ function extractFeatures(mono, sr) {
   return { chroma, contrast, rms, N, hopSec: CFG.HOP_SEC };
 }
 
-/* ============================================================
-   起音包络（10ms 帧率，用于 BPM 估计和边界精修）
-   ============================================================ */
 function computeOnsetEnvelope(mono, sr) {
   const hop = Math.round(CFG.ONSET_HOP_SEC * sr);
   const winSize = Math.round(0.03 * sr);
@@ -350,7 +340,6 @@ function computeOnsetEnvelope(mono, sr) {
     env[t] = Math.max(0, cur - prev);
     prev = cur;
   }
-  // 平滑
   const sm = new Float32Array(N);
   for (let i = 2; i < N - 2; i++) {
     sm[i] = (env[i-2] + env[i-1] + env[i] + env[i+1] + env[i+2]) / 5;
@@ -358,12 +347,8 @@ function computeOnsetEnvelope(mono, sr) {
   return { env: sm, hopSec: CFG.ONSET_HOP_SEC, N };
 }
 
-/* ============================================================
-   帧相似度（移调不变 chroma + 对比度）
-   ============================================================ */
 function frameSim(chroma, contrast, i, j) {
   const bi = i * 12, bj = j * 12;
-  // 12 种半音旋转取最大
   let best = 0;
   for (let sh = 0; sh < 12; sh++) {
     let s = 0;
@@ -378,13 +363,9 @@ function frameSim(chroma, contrast, i, j) {
   return 0.6 * best + 0.4 * cSim;
 }
 
-/* ============================================================
-   Novelty：checkerboard kernel 检测内容突变
-   ============================================================ */
 function computeNovelty(chroma, contrast, N, K) {
   const nov = new Float32Array(N);
   for (let t = K; t < N - K; t++) {
-    // in-left × in-left
     let inSum = 0, inCnt = 0;
     for (let i = t - K; i < t; i++) {
       for (let j = i + 1; j < t; j++) {
@@ -392,7 +373,6 @@ function computeNovelty(chroma, contrast, N, K) {
         inCnt++;
       }
     }
-    // in-right × in-right
     let outSum = 0, outCnt = 0;
     for (let i = t; i < t + K; i++) {
       for (let j = i + 1; j < t + K; j++) {
@@ -400,7 +380,6 @@ function computeNovelty(chroma, contrast, N, K) {
         outCnt++;
       }
     }
-    // cross
     let crossSum = 0, crossCnt = 0;
     for (let i = t - K; i < t; i++) {
       for (let j = t; j < t + K; j++) {
@@ -416,11 +395,7 @@ function computeNovelty(chroma, contrast, N, K) {
   return nov;
 }
 
-/* ============================================================
-   峰值拾取 + 边界吸附到起音
-   ============================================================ */
 function findBoundaryPeaks(nov, N, minFrames, sensitivity) {
-  // 平滑
   const sm = new Float32Array(N);
   const sw = 4;
   for (let i = 0; i < N; i++) {
@@ -454,7 +429,6 @@ function snapBoundariesToOnsets(boundaries, onsetEnv, onsetHop, featHop, N) {
   for (let i = 1; i < boundaries.length - 1; i++) {
     const bf = boundaries[i];
     const tSec = bf * featHop;
-    // 在 ±0.25 秒范围内找最强起音
     const win = Math.round(0.25 / onsetHop);
     const center = Math.round(tSec / onsetHop);
     const a = Math.max(1, center - win);
@@ -467,7 +441,6 @@ function snapBoundariesToOnsets(boundaries, onsetEnv, onsetHop, featHop, N) {
       }
     }
     if (bestIdx > 0 && bestVal > 0) {
-      // 转为特征帧索引
       const tSnap = bestIdx * onsetHop;
       const fSnap = Math.round(tSnap / featHop);
       if (fSnap > snapped[snapped.length - 1] + 2 && fSnap < N - 2) {
@@ -483,10 +456,7 @@ function snapBoundariesToOnsets(boundaries, onsetEnv, onsetHop, featHop, N) {
   return snapped;
 }
 
-/* ============================================================
-   段落特征
-   ============================================================ */
-function buildSegments(chroma, contrast, rms, boundaries, hop, sr, mono) {
+function buildSegments(chroma, contrast, rms, boundaries, hop) {
   const segs = [];
   for (let k = 0; k < boundaries.length - 1; k++) {
     const a = boundaries[k], b = boundaries[k + 1];
@@ -503,7 +473,6 @@ function buildSegments(chroma, contrast, rms, boundaries, hop, sr, mono) {
       for (let j = 0; j < 7; j++) featT[j] += contrast[bt + j];
       rmsSum += rms[t];
     }
-    // 归一化
     let nP = 0;
     for (let j = 0; j < 12; j++) nP += featP[j] * featP[j];
     nP = Math.sqrt(nP) || 1;
@@ -530,9 +499,6 @@ function buildSegments(chroma, contrast, rms, boundaries, hop, sr, mono) {
   return segs;
 }
 
-/* ============================================================
-   段落匹配
-   ============================================================ */
 function tiPitchSim(a, b) {
   let best = 0;
   for (let sh = 0; sh < 12; sh++) {
@@ -563,7 +529,6 @@ function matchSegments(segs, minSec, maxSec, minSim, wPitch) {
       const pitch = tiPitchSim(si.featP, sj.featP);
       const timbre = timbreSim(si.featT, sj.featT);
       const durS = durRatio;
-      // 加权组合
       const sim = wPitch * pitch + (1 - wPitch) * (0.7 * timbre + 0.3 * durS);
 
       if (sim >= minSim) {
@@ -587,16 +552,13 @@ const S = {
   mono: null,
   sr: 0,
   duration: 0,
-  // 特征
   chroma: null,
   contrast: null,
   rms: null,
   N: 0,
   hopSec: 0,
-  // 起音
   onsetEnv: null,
   onsetHopSec: 0,
-  // 结构
   novelty: null,
   boundaries: null,
   originalBoundaries: null,
@@ -604,7 +566,6 @@ const S = {
   pairs: null,
   selectedPairIdx: -1,
   selectedSegIdx: -1,
-  // 播放
   playing: false,
   mode: 'A',
   srcNode: null,
@@ -613,21 +574,14 @@ const S = {
   startOffset: 0,
   endOffset: 0,
   rafId: null,
-  // 渲染
   peaks: null,
   peaksW: 0,
   peaksH: 0,
-  // 元数据
   fileName: '',
   originalName: '',
-  // 交互
-  draggingBoundary: -1,
-  dragOffsetPx: 0
+  draggingBoundary: -1
 };
 
-/* ============================================================
-   参数记忆
-   ============================================================ */
 const paramMemory = {};
 const nameMap = (() => {
   try { return JSON.parse(localStorage.getItem('loop-names-pro') || '{}'); }
@@ -658,12 +612,26 @@ function saveParams(name) {
   };
 }
 
-/* ============================================================
-   DOM 引用
-   ============================================================ */
 const drop = $('#drop'), fileInput = $('#file'), statusEl = $('#status'), panel = $('#panel');
 const nameInput = $('#nameInput'), namerow = $('#namerow');
 const canvas = $('#wave'), wavebox = $('#wavebox'), playheadEl = $('#playhead');
+const audioDiag = $('#audiodiag');
+
+/* ============================================================
+   音频上下文状态显示
+   ============================================================ */
+function updateAudioDiag() {
+  if (!S.ctx) {
+    audioDiag.innerHTML = 'AudioContext: 未创建';
+    return;
+  }
+  const st = S.ctx.state;
+  const cls = st === 'running' ? '' : 'bad';
+  audioDiag.innerHTML = 'AudioContext: <b class="' + cls + '">' + st + '</b>' +
+    ' · sampleRate ' + S.ctx.sampleRate;
+}
+setInterval(updateAudioDiag, 1000);
+updateAudioDiag();
 
 /* ============================================================
    文件导入
@@ -780,7 +748,7 @@ async function analyzeFile(file) {
     S.onsetEnv = onset.env;
     S.onsetHopSec = onset.hopSec;
 
-    statusEl.textContent = '正在做结构分析（Novelty）…（可能需要 10-30 秒）';
+    statusEl.textContent = '正在做结构分析…（可能需要 10-30 秒）';
     await yieldUI();
     S.novelty = computeNovelty(S.chroma, S.contrast, S.N, CFG.NOVELTY_K);
 
@@ -796,21 +764,14 @@ async function runStructure() {
   if (!S.novelty) return;
   const minFrames = Math.round(CFG.MIN_SEG / S.hopSec);
   let bounds = findBoundaryPeaks(S.novelty, S.N, minFrames, CFG.BOUNDARY_SENS);
-  // 吸附到起音
   bounds = snapBoundariesToOnsets(bounds, S.onsetEnv, S.onsetHopSec, S.hopSec, S.N);
-  // 保存原始边界（重置时恢复）
   if (!S.originalBoundaries || S.originalBoundaries.length < 2) {
     S.originalBoundaries = bounds.slice();
   }
   S.boundaries = bounds;
 
-  // 构建段落
-  S.segments = buildSegments(
-    S.chroma, S.contrast, S.rms, S.boundaries,
-    S.hopSec, S.sr, S.mono
-  );
+  S.segments = buildSegments(S.chroma, S.contrast, S.rms, S.boundaries, S.hopSec);
 
-  // 匹配
   S.pairs = matchSegments(
     S.segments, CFG.MIN_SEG, CFG.MAX_SEG,
     CFG.SIM_THRESHOLD, CFG.WEIGHT_PITCH
@@ -832,12 +793,9 @@ async function runStructure() {
   }
 }
 
-/* ============================================================
-   重算（参数改变或边界拖拽后）
-   ============================================================ */
 async function recomputeAll() {
   if (!S.chroma) return;
-  S.segments = buildSegments(S.chroma, S.contrast, S.rms, S.boundaries, S.hopSec, S.sr, S.mono);
+  S.segments = buildSegments(S.chroma, S.contrast, S.rms, S.boundaries, S.hopSec);
   S.pairs = matchSegments(S.segments, CFG.MIN_SEG, CFG.MAX_SEG, CFG.SIM_THRESHOLD, CFG.WEIGHT_PITCH);
   if (S.pairs.length > 0) {
     selectPair(Math.min(S.selectedPairIdx < 0 ? 0 : S.selectedPairIdx, S.pairs.length - 1));
@@ -877,7 +835,7 @@ function renderCands() {
     return;
   }
   const maxShow = Math.min(S.pairs.length, 40);
-  box.innerHTML = '<h4>候选段对（按相似度排序 · 点一下循环 A，点两下循环 B）</h4>';
+  box.innerHTML = '<h4>候选段对（按相似度排序）</h4>';
   for (let k = 0; k < maxShow; k++) {
     const p = S.pairs[k];
     const el = document.createElement('div');
@@ -954,7 +912,6 @@ function drawWave() {
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.clearRect(0, 0, W, H);
 
-  // 背景
   ctx.fillStyle = 'rgba(255,255,255,0.02)';
   ctx.fillRect(0, 0, W, H);
 
@@ -964,7 +921,6 @@ function drawWave() {
     S.peaksH = H;
   }
 
-  // 高亮选中段对
   if (S.selectedPairIdx >= 0 && S.pairs) {
     const p = S.pairs[S.selectedPairIdx];
     const ax1 = p.A.startSec / S.duration * W;
@@ -983,7 +939,6 @@ function drawWave() {
     ctx.fillRect(x1, 0, x2 - x1, H);
   }
 
-  // 波形
   const mid = H / 2;
   const grad = ctx.createLinearGradient(0, 0, W, 0);
   grad.addColorStop(0, '#38bdf8');
@@ -996,7 +951,6 @@ function drawWave() {
     ctx.fillRect(x, y1, 1, Math.max(1, y2 - y1));
   }
 
-  // 段落边界线
   if (S.boundaries && S.boundaries.length > 2) {
     ctx.strokeStyle = 'rgba(255,255,255,0.35)';
     ctx.lineWidth = 1;
@@ -1006,7 +960,6 @@ function drawWave() {
       ctx.moveTo(x, 0);
       ctx.lineTo(x, H);
       ctx.stroke();
-      // 顶部手柄
       ctx.fillStyle = '#fff';
       ctx.beginPath();
       ctx.arc(x, 8, 4, 0, Math.PI * 2);
@@ -1018,7 +971,6 @@ function drawWave() {
     }
   }
 
-  // 选中段对边界加粗
   if (S.selectedPairIdx >= 0 && S.pairs) {
     const p = S.pairs[S.selectedPairIdx];
     const marks = [
@@ -1039,22 +991,16 @@ function drawWave() {
 }
 
 /* ============================================================
-   波形交互：点击定位 + 拖拽边界
+   波形交互
    ============================================================ */
-let pointerDownX = 0;
-let pointerDownTime = 0;
-
 wavebox.addEventListener('pointerdown', e => {
   if (!S.mono) return;
   e.preventDefault();
   const rect = wavebox.getBoundingClientRect();
   const x = e.clientX - rect.left;
-  pointerDownX = x;
-  pointerDownTime = Date.now();
 
-  // 检查是否在边界附近
   const W = rect.width;
-  const hitRadius = 10;
+  const hitRadius = 14;
   let hitIdx = -1;
   let bestDist = hitRadius;
   if (S.boundaries) {
@@ -1070,24 +1016,21 @@ wavebox.addEventListener('pointerdown', e => {
 
   if (hitIdx > 0) {
     S.draggingBoundary = hitIdx;
-    wavebox.setPointerCapture(e.pointerId);
+    try { wavebox.setPointerCapture(e.pointerId); } catch (err) {}
     return;
   }
 
-  // 否则定位播放头
   const pct = Math.max(0, Math.min(1, x / W));
   const t = pct * S.duration;
   playheadEl.classList.add('on');
   playheadEl.style.left = (pct * 100) + '%';
   $('#tNow').textContent = fmt(t);
 
-  // 找该位置所属的段落
   if (S.segments) {
     for (let k = 0; k < S.segments.length; k++) {
       const s = S.segments[k];
       if (t >= s.startSec && t <= s.endSec) {
         S.selectedSegIdx = k;
-        // 找与该段相关的匹配对
         if (S.pairs) {
           let found = -1;
           for (let p = 0; p < S.pairs.length; p++) {
@@ -1116,10 +1059,9 @@ wavebox.addEventListener('pointermove', e => {
   const idx = S.draggingBoundary;
   const prevFrame = S.boundaries[idx - 1];
   const nextFrame = S.boundaries[idx + 1];
-  const minGap = Math.round(2 / S.hopSec); // 至少 2 秒
+  const minGap = Math.round(2 / S.hopSec);
   const clamped = Math.max(prevFrame + minGap, Math.min(nextFrame - minGap, newFrame));
   S.boundaries[idx] = clamped;
-  // 重新构建段落（不重匹配，等松手）
   drawWave();
 });
 
@@ -1141,16 +1083,41 @@ wavebox.addEventListener('pointercancel', () => {
 });
 
 /* ============================================================
-   播放
+   ★ 播放：修复 iOS 上 resume() 时序问题
    ============================================================ */
-function ensureCtxRunning() {
+
+/* 同步 resume（用于用户手势栈内） */
+function tryResumeSync() {
   if (!S.ctx) return;
-  if (S.ctx.state !== 'running') {
+  if (S.ctx.state === 'suspended') {
     try { S.ctx.resume(); } catch (e) {}
   }
-  if (S.ctx.state !== 'running') {
-    try { S.ctx.resume(); } catch (e) {}
-  }
+}
+
+/* 确保 context running，返回 Promise（可能立即 resolve） */
+function ensureCtxRunning() {
+  if (!S.ctx) return Promise.resolve(false);
+  if (S.ctx.state === 'running') return Promise.resolve(true);
+  return new Promise((resolve) => {
+    let settled = false;
+    const done = (ok) => {
+      if (settled) return;
+      settled = true;
+      resolve(ok);
+    };
+    try {
+      const p = S.ctx.resume();
+      if (p && typeof p.then === 'function') {
+        p.then(() => done(S.ctx.state === 'running')).catch(() => done(false));
+      } else {
+        setTimeout(() => done(S.ctx.state === 'running'), 50);
+      }
+    } catch (e) {
+      done(false);
+    }
+    // 兜底：最多等 800ms
+    setTimeout(() => done(S.ctx.state === 'running'), 800);
+  });
 }
 
 function stopPlay() {
@@ -1158,6 +1125,10 @@ function stopPlay() {
     try { S.srcNode.stop(); } catch (e) {}
     try { S.srcNode.disconnect(); } catch (e) {}
     S.srcNode = null;
+  }
+  if (S.gainNode) {
+    try { S.gainNode.disconnect(); } catch (e) {}
+    S.gainNode = null;
   }
   S.playing = false;
   if (S.rafId) cancelAnimationFrame(S.rafId);
@@ -1171,43 +1142,63 @@ function updatePlayBtns() {
   $('#btnLoopB').textContent = (S.playing && S.mode === 'B') ? '❚❚ 停止循环' : '▶ 循环 B 段';
 }
 
-function startLoop(startSec, endSec, mode) {
+/* ★ 关键：异步 startLoop，等 context 真的 running 后再 start */
+async function startLoop(startSec, endSec, mode) {
   if (!S.buffer || !S.ctx) return;
-  if (endSec - startSec < 0.5) return;
-  ensureCtxRunning();
+  if (endSec - startSec < 0.5) {
+    statusEl.className = 'status err';
+    statusEl.textContent = '选中段太短（< 0.5s）';
+    return;
+  }
+
+  // 1. 用户手势栈内同步尝试 resume
+  tryResumeSync();
+
+  // 2. 停止已有播放
   stopPlay();
 
-  const node = S.ctx.createBufferSource();
-  const gain = S.ctx.createGain();
-  gain.gain.value = 1;
-  node.buffer = S.buffer;
-  node.loop = true;
-  node.loopStart = startSec;
-  node.loopEnd = endSec;
-  node.connect(gain);
-  gain.connect(S.ctx.destination);
+  // 3. 等 context 真的 running
+  const ok = await ensureCtxRunning();
+  if (!ok) {
+    statusEl.className = 'status warn';
+    statusEl.textContent = 'AudioContext 未 running（state=' + S.ctx.state + '）。检查：① 侧边静音拨片 ② 音量 ③ 用 Safari 打开';
+    return;
+  }
 
-  const t0 = S.ctx.currentTime + 0.05;
-  node.start(t0, startSec);
+  // 4. 创建节点
+  try {
+    const node = S.ctx.createBufferSource();
+    const gain = S.ctx.createGain();
+    gain.gain.value = 1;
+    node.buffer = S.buffer;
+    node.loop = true;
+    node.loopStart = startSec;
+    node.loopEnd = endSec;
+    node.connect(gain);
+    gain.connect(S.ctx.destination);
 
-  S.srcNode = node;
-  S.gainNode = gain;
-  S.startCtxTime = t0;
-  S.startOffset = startSec;
-  S.endOffset = endSec;
-  S.playing = true;
-  S.mode = mode;
+    const t0 = S.ctx.currentTime + 0.08;
+    node.start(t0, startSec);
 
-  playheadEl.classList.add('on');
-  updatePlayBtns();
-  rafLoop();
+    S.srcNode = node;
+    S.gainNode = gain;
+    S.startCtxTime = t0;
+    S.startOffset = startSec;
+    S.endOffset = endSec;
+    S.playing = true;
+    S.mode = mode;
 
-  setTimeout(() => {
-    if (S.ctx && S.ctx.state !== 'running') {
-      statusEl.className = 'status warn';
-      statusEl.textContent = 'AudioContext 未运行。检查：① 侧边静音拨片 ② 音量 ③ 用 Safari 打开';
-    }
-  }, 900);
+    playheadEl.classList.add('on');
+    updatePlayBtns();
+    rafLoop();
+
+    statusEl.className = 'status ok';
+    statusEl.textContent = '正在循环 ' + (mode === 'A' ? 'A 段' : 'B 段') + '（' + fmt(startSec) + ' → ' + fmt(endSec) + '）';
+  } catch (err) {
+    console.error(err);
+    statusEl.className = 'status err';
+    statusEl.textContent = '播放失败：' + (err.message || err);
+  }
 }
 
 function rafLoop() {
@@ -1222,10 +1213,49 @@ function rafLoop() {
 }
 
 /* ============================================================
+   测试声音：1 秒 440Hz 正弦波，验证音频管线
+   ============================================================ */
+async function testSound() {
+  if (!S.ctx) {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) { statusEl.className = 'status err'; statusEl.textContent = '不支持 AudioContext'; return; }
+    S.ctx = new AC();
+  }
+  tryResumeSync();
+  const ok = await ensureCtxRunning();
+  if (!ok) {
+    statusEl.className = 'status warn';
+    statusEl.textContent = 'AudioContext 未 running（state=' + S.ctx.state + '），无法测试';
+    return;
+  }
+  try {
+    const osc = S.ctx.createOscillator();
+    const gain = S.ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.value = 440;
+    // 淡入淡出，避免爆音
+    const now = S.ctx.currentTime;
+    gain.gain.setValueAtTime(0, now);
+    gain.gain.linearRampToValueAtTime(0.15, now + 0.02);
+    gain.gain.setValueAtTime(0.15, now + 0.6);
+    gain.gain.linearRampToValueAtTime(0, now + 0.8);
+    osc.connect(gain);
+    gain.connect(S.ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.85);
+    statusEl.className = 'status ok';
+    statusEl.textContent = '测试音已播放 · 如果没听到，检查音量/静音拨片 · state=' + S.ctx.state;
+  } catch (err) {
+    statusEl.className = 'status err';
+    statusEl.textContent = '测试音失败：' + (err.message || err);
+  }
+}
+
+/* ============================================================
    按钮
    ============================================================ */
 $('#btnLoopA').addEventListener('click', () => {
-  ensureCtxRunning();
+  tryResumeSync();
   if (S.playing && S.mode === 'A') { stopPlay(); return; }
   if (S.selectedPairIdx < 0) { statusEl.className = 'status err'; statusEl.textContent = '请先选一个段对'; return; }
   const p = S.pairs[S.selectedPairIdx];
@@ -1233,7 +1263,7 @@ $('#btnLoopA').addEventListener('click', () => {
 });
 
 $('#btnLoopB').addEventListener('click', () => {
-  ensureCtxRunning();
+  tryResumeSync();
   if (S.playing && S.mode === 'B') { stopPlay(); return; }
   if (S.selectedPairIdx < 0) { statusEl.className = 'status err'; statusEl.textContent = '请先选一个段对'; return; }
   const p = S.pairs[S.selectedPairIdx];
@@ -1241,14 +1271,12 @@ $('#btnLoopB').addEventListener('click', () => {
 });
 
 $('#btnStop').addEventListener('click', stopPlay);
+$('#btnTest').addEventListener('click', testSound);
 
 $('#btnSplit').addEventListener('click', async () => {
   if (S.selectedSegIdx < 0 || !S.segments) return;
   const seg = S.segments[S.selectedSegIdx];
-  // 用播放头位置
-  const curSec = parseFloat($('#tNow').textContent.split(':').reduce((a, b) => a * 60 + parseFloat(b), 0)) || 0;
-  // 用 pointer 位置更简单：从 playhead 百分比
-  const pct = parseFloat(playheadEl.style.left) / 100;
+  const pct = parseFloat(playheadEl.style.left) / 100 || 0;
   const splitSec = pct * S.duration;
   if (splitSec <= seg.startSec + 1 || splitSec >= seg.endSec - 1) {
     statusEl.className = 'status err';
@@ -1256,7 +1284,6 @@ $('#btnSplit').addEventListener('click', async () => {
     return;
   }
   const splitFrame = Math.round(splitSec / S.hopSec);
-  // 插入新边界
   const idx = S.boundaries.indexOf(seg.startFrame);
   if (idx >= 0) {
     S.boundaries.splice(idx + 1, 0, splitFrame);
@@ -1307,7 +1334,6 @@ function scheduleReanalyze() {
   clearTimeout(debounceTimer);
   debounceTimer = setTimeout(async () => {
     if (!S.chroma) return;
-    // 边界灵敏度改变需要重做边界检测
     await redoBoundaries();
   }, 400);
 }
@@ -1365,7 +1391,7 @@ document.addEventListener('keydown', e => {
   if (e.target.matches('input,textarea')) return;
   if (e.code === 'Space') {
     e.preventDefault();
-    ensureCtxRunning();
+    tryResumeSync();
     if (S.playing) stopPlay();
     else if (S.selectedPairIdx >= 0) {
       const p = S.pairs[S.selectedPairIdx];
@@ -1389,7 +1415,6 @@ if (window.ResizeObserver) {
   });
 }
 
-/* 初始同步滑块 */
 syncSliders();
 
 })();
