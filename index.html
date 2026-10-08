@@ -1273,4 +1273,126 @@ $('#btnMergeL').addEventListener('click', async () => {
   if (idx > 0) {
     S.boundaries.splice(idx, 1);
     await recomputeAll();
-    S.selectedSegIdx = Math.max(0, S.selected
+    S.selectedSegIdx = Math.max(0, S.selectedSegIdx - 1);
+    statusEl.className = 'status ok';
+    statusEl.textContent = '已与左邻合并';
+  }
+});
+
+$('#btnMergeR').addEventListener('click', async () => {
+  if (S.selectedSegIdx < 0 || !S.segments || S.selectedSegIdx >= S.segments.length - 1) return;
+  const seg = S.segments[S.selectedSegIdx];
+  const idx = S.boundaries.indexOf(seg.endFrame);
+  if (idx > 0 && idx < S.boundaries.length - 1) {
+    S.boundaries.splice(idx, 1);
+    await recomputeAll();
+    statusEl.className = 'status ok';
+    statusEl.textContent = '已与右邻合并';
+  }
+});
+
+$('#btnReset').addEventListener('click', async () => {
+  if (!S.originalBoundaries) return;
+  S.boundaries = S.originalBoundaries.slice();
+  await recomputeAll();
+  statusEl.className = 'status ok';
+  statusEl.textContent = '已重置到算法原始边界';
+});
+
+/* ============================================================
+   参数滑块
+   ============================================================ */
+let debounceTimer = null;
+function scheduleReanalyze() {
+  clearTimeout(debounceTimer);
+  debounceTimer = setTimeout(async () => {
+    if (!S.chroma) return;
+    // 边界灵敏度改变需要重做边界检测
+    await redoBoundaries();
+  }, 400);
+}
+function scheduleRematch() {
+  clearTimeout(debounceTimer);
+  debounceTimer = setTimeout(async () => {
+    if (!S.chroma) return;
+    await recomputeAll();
+  }, 200);
+}
+
+function syncSliders() {
+  $('#pMin').value = CFG.MIN_SEG; $('#vMin').textContent = CFG.MIN_SEG + 's';
+  $('#pMax').value = CFG.MAX_SEG; $('#vMax').textContent = CFG.MAX_SEG + 's';
+  $('#pSim').value = CFG.SIM_THRESHOLD; $('#vSim').textContent = CFG.SIM_THRESHOLD.toFixed(2);
+  $('#pBnd').value = CFG.BOUNDARY_SENS; $('#vBnd').textContent = CFG.BOUNDARY_SENS.toFixed(2);
+  $('#pWei').value = CFG.WEIGHT_PITCH; $('#vWei').textContent = CFG.WEIGHT_PITCH.toFixed(2);
+}
+
+$('#pMin').addEventListener('input', e => {
+  CFG.MIN_SEG = parseInt(e.target.value, 10);
+  $('#vMin').textContent = CFG.MIN_SEG + 's';
+  saveParams(S.fileName);
+  scheduleReanalyze();
+});
+$('#pMax').addEventListener('input', e => {
+  CFG.MAX_SEG = parseInt(e.target.value, 10);
+  $('#vMax').textContent = CFG.MAX_SEG + 's';
+  saveParams(S.fileName);
+  scheduleRematch();
+});
+$('#pSim').addEventListener('input', e => {
+  CFG.SIM_THRESHOLD = parseFloat(e.target.value);
+  $('#vSim').textContent = CFG.SIM_THRESHOLD.toFixed(2);
+  saveParams(S.fileName);
+  scheduleRematch();
+});
+$('#pBnd').addEventListener('input', e => {
+  CFG.BOUNDARY_SENS = parseFloat(e.target.value);
+  $('#vBnd').textContent = CFG.BOUNDARY_SENS.toFixed(2);
+  saveParams(S.fileName);
+  scheduleReanalyze();
+});
+$('#pWei').addEventListener('input', e => {
+  CFG.WEIGHT_PITCH = parseFloat(e.target.value);
+  $('#vWei').textContent = CFG.WEIGHT_PITCH.toFixed(2);
+  saveParams(S.fileName);
+  scheduleRematch();
+});
+
+/* ============================================================
+   键盘
+   ============================================================ */
+document.addEventListener('keydown', e => {
+  if (e.target.matches('input,textarea')) return;
+  if (e.code === 'Space') {
+    e.preventDefault();
+    ensureCtxRunning();
+    if (S.playing) stopPlay();
+    else if (S.selectedPairIdx >= 0) {
+      const p = S.pairs[S.selectedPairIdx];
+      startLoop(p.A.startSec, p.A.endSec, 'A');
+    }
+  }
+});
+
+/* ============================================================
+   Resize
+   ============================================================ */
+if (window.ResizeObserver) {
+  new ResizeObserver(() => {
+    S.peaks = null;
+    drawWave();
+  }).observe(wavebox);
+} else {
+  window.addEventListener('resize', () => {
+    S.peaks = null;
+    drawWave();
+  });
+}
+
+/* 初始同步滑块 */
+syncSliders();
+
+})();
+</script>
+</body>
+</html>
