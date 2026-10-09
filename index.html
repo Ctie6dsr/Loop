@@ -5,134 +5,145 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Auto Loop Finder · Pro</title>
 <style>
-:root{--bg:#0a0a0f;--card:rgba(255,255,255,.04);--border:rgba(255,255,255,.1);--accent:#38bdf8;--accent-2:#a855f7;--glow:rgba(56,189,248,.35);--text:#e5e7eb;--soft:#9ca3af;--danger:#ff3b30;--ok:#4ade80}
+:root{--bg:#0a0a0f;--card:rgba(255,255,255,.04);--border:rgba(255,255,255,.1);--accent:#38bdf8;--accent-2:#a855f7;--glow:rgba(56,189,248,.35);--text:#e5e7eb;--soft:#9ca3af;--danger:#ff3b30;--ok:#4ade80;--warn:#fbbf24}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 body{min-height:100vh;padding:28px 16px 60px;color:var(--text);font-family:"Inter","PingFang SC","Microsoft YaHei",-apple-system,sans-serif;background:var(--bg);background-image:radial-gradient(600px 400px at 15% 0%,rgba(56,189,248,.10),transparent 60%),radial-gradient(700px 500px at 90% 100%,rgba(168,85,247,.10),transparent 60%);background-attachment:fixed}
-.wrap{max-width:820px;margin:0 auto}
+.wrap{max-width:900px;margin:0 auto}
 h1{font-size:23px;font-weight:600;letter-spacing:.5px;margin-bottom:6px;background:linear-gradient(90deg,var(--accent),var(--accent-2));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
-.sub{color:var(--soft);font-size:13px;margin-bottom:22px;line-height:1.7}
-.drop{position:relative;display:block;border:1.5px dashed var(--border);border-radius:18px;padding:32px 20px;text-align:center;background:var(--card);cursor:pointer;transition:border-color .2s,box-shadow .2s,background .2s}
+.sub{color:var(--soft);font-size:13px;margin-bottom:20px;line-height:1.7}
+.drop{position:relative;display:block;border:1.5px dashed var(--border);border-radius:18px;padding:28px 20px;text-align:center;background:var(--card);cursor:pointer;transition:border-color .2s,box-shadow .2s,background .2s;margin-bottom:18px}
 .drop:hover,.drop.over{border-color:var(--accent);box-shadow:0 0 26px var(--glow);background:rgba(56,189,248,.05)}
 .drop .big{font-size:15px;font-weight:600;margin-bottom:6px}
 .drop .small{font-size:12.5px;color:var(--soft)}
 .drop input[type=file]{position:absolute;left:0;top:0;width:100%;height:100%;opacity:0;cursor:pointer;font-size:0;z-index:2;-webkit-appearance:none;appearance:none}
-.status{margin-top:12px;font-size:13.5px;color:var(--soft);text-align:center;min-height:20px;line-height:1.6;word-break:break-all}
-.status.err{color:var(--danger)}.status.ok{color:var(--accent)}.status.warn{color:#fbbf24}
-#env{margin-top:6px;font-size:11px;color:#555;text-align:center;font-family:monospace}
-#audiodiag{margin-top:4px;font-size:11px;text-align:center;font-family:monospace;color:#555}
+
+.globalbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center}
+.globalbar .info{flex:1;font-size:12.5px;color:var(--soft);font-variant-numeric:tabular-nums;min-width:120px}
+.btn{background:var(--card);color:var(--text);padding:9px 14px;border:1px solid var(--border);border-radius:10px;font-size:13px;font-family:inherit;cursor:pointer;user-select:none;transition:transform .15s,box-shadow .2s,border-color .2s,background .2s;display:inline-flex;align-items:center;gap:6px}
+.btn:hover{transform:translateY(-1px);border-color:var(--accent);box-shadow:0 0 14px var(--glow)}
+.btn:active{transform:translateY(0)}
+.btn.primary{background:var(--accent);color:#05060a;font-weight:600;border:none}
+.btn.danger{color:var(--danger);border-color:rgba(255,59,48,.3)}
+.btn.danger:hover{border-color:var(--danger);box-shadow:0 0 14px rgba(255,59,48,.35)}
+.btn.sm{padding:6px 10px;font-size:12px}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none;box-shadow:none}
+
+#env{margin-top:4px;font-size:11px;color:#555;text-align:center;font-family:monospace}
+#audiodiag{margin-top:2px;font-size:11px;text-align:center;font-family:monospace;color:#555}
 #audiodiag b{color:var(--accent)}
 #audiodiag .bad{color:var(--danger)}
-.namerow{margin-top:10px;display:none;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap}
-.namerow.on{display:flex}
-.namerow label{font-size:12.5px;color:var(--soft)}
-.namerow input{background:rgba(255,255,255,.05);border:1px solid var(--border);color:var(--text);padding:8px 14px;border-radius:10px;font-size:13.5px;font-family:inherit;outline:none;min-width:200px}
+
+.status{margin-top:10px;font-size:13px;color:var(--soft);text-align:center;min-height:20px;line-height:1.6;word-break:break-all}
+.status.err{color:var(--danger)}.status.ok{color:var(--accent)}.status.warn{color:var(--warn)}
+
+.songlist{display:flex;flex-direction:column;gap:10px;margin-top:14px}
+.songcard{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;transition:border-color .2s,box-shadow .2s}
+.songcard.expanded{border-color:rgba(56,189,248,.4);box-shadow:0 0 20px rgba(56,189,248,.15)}
+.songhead{display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;user-select:none;transition:background .15s}
+.songhead:hover{background:rgba(255,255,255,.02)}
+.songhead .chev{flex:0 0 16px;color:var(--soft);font-size:10px;transition:transform .2s}
+.songcard.expanded .songhead .chev{transform:rotate(90deg)}
+.songhead .info{flex:1;min-width:0}
+.songhead .title{font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.songhead .meta{font-size:11.5px;color:var(--soft);margin-top:2px;font-variant-numeric:tabular-nums}
+.songhead .pairs{font-size:11.5px;color:var(--accent);font-variant-numeric:tabular-nums;margin-right:6px;white-space:nowrap}
+.songhead .pairs.empty{color:var(--soft)}
+.songhead .acts{display:flex;gap:4px;flex-shrink:0}
+.iconbtn{background:transparent;border:1px solid transparent;color:var(--soft);width:30px;height:30px;border-radius:8px;cursor:pointer;font-size:14px;display:inline-flex;align-items:center;justify-content:center;transition:border-color .15s,color .15s,background .15s}
+.iconbtn:hover{border-color:var(--border);color:var(--text);background:rgba(255,255,255,.03)}
+.iconbtn.del:hover{border-color:rgba(255,59,48,.4);color:var(--danger)}
+
+.songbody{display:none;padding:0 14px 14px;border-top:1px solid var(--border)}
+.songcard.expanded .songbody{display:block}
+
+.bodystatus{font-size:12.5px;color:var(--soft);padding:10px 0 4px;text-align:center;line-height:1.6;word-break:break-all}
+.bodystatus.err{color:var(--danger)}.bodystatus.ok{color:var(--accent)}.bodystatus.warn{color:var(--warn)}
+
+.namerow{margin-top:10px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:12.5px}
+.namerow label{color:var(--soft)}
+.namerow input{background:rgba(255,255,255,.05);border:1px solid var(--border);color:var(--text);padding:7px 12px;border-radius:10px;font-size:13px;font-family:inherit;outline:none;flex:1;min-width:180px}
 .namerow input:focus{border-color:var(--accent);box-shadow:0 0 14px var(--glow)}
-.panel{margin-top:20px;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;display:none}
-.panel.on{display:block}
-.head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:12px;flex-wrap:wrap}
-.title{font-weight:600;font-size:15px}
-.meta{font-size:12.5px;color:var(--soft);margin-top:3px}
-.pill{font-size:12px;color:var(--accent);border:1px solid rgba(56,189,248,.3);background:rgba(56,189,248,.07);padding:5px 11px;border-radius:999px;font-variant-numeric:tabular-nums}
-.wavebox{position:relative;height:150px;border-radius:12px;overflow:hidden;border:1px solid var(--border);background:rgba(0,0,0,.25);touch-action:none;cursor:crosshair}
+
+.wavebox{position:relative;height:140px;border-radius:12px;overflow:hidden;border:1px solid var(--border);background:rgba(0,0,0,.25);touch-action:none;cursor:crosshair;margin-top:10px}
 canvas{display:block;width:100%;height:100%}
 .playhead{position:absolute;top:0;bottom:0;width:2px;margin-left:-1px;left:0;background:#fff;box-shadow:0 0 10px rgba(255,255,255,.9);pointer-events:none;display:none;z-index:5}
 .playhead.on{display:block}
 .timebar{display:flex;justify-content:space-between;font-size:12px;color:var(--soft);margin-top:6px;font-variant-numeric:tabular-nums}
-.seginfo{margin-top:10px;font-size:12px;color:var(--soft);min-height:18px;font-variant-numeric:tabular-nums}
+
+.seginfo{margin-top:8px;font-size:12px;color:var(--soft);min-height:18px;font-variant-numeric:tabular-nums;line-height:1.5;word-break:break-all}
 .seginfo b{color:var(--accent)}
-.cands{margin-top:12px;max-height:300px;overflow-y:auto;padding-right:4px;-webkit-overflow-scrolling:touch}
-.cands h4{font-size:12.5px;color:var(--soft);font-weight:500;margin-bottom:8px;letter-spacing:.4px}
-.cand{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 12px;border-radius:10px;border:1px solid var(--border);margin-bottom:6px;cursor:pointer;font-size:12.5px;transition:border-color .15s,background .15s}
+
+.cands{margin-top:10px;max-height:260px;overflow-y:auto;padding-right:4px;-webkit-overflow-scrolling:touch}
+.cands h4{font-size:12px;color:var(--soft);font-weight:500;margin-bottom:6px;letter-spacing:.4px}
+.cand{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:7px 11px;border-radius:9px;border:1px solid var(--border);margin-bottom:5px;cursor:pointer;font-size:12px;transition:border-color .15s,background .15s}
 .cand:hover{border-color:rgba(255,255,255,.2)}
-.cand.sel{border-color:var(--accent);background:rgba(56,189,248,.06);box-shadow:0 0 16px var(--glow)}
+.cand.sel{border-color:var(--accent);background:rgba(56,189,248,.06);box-shadow:0 0 12px var(--glow)}
 .cand .pair{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0}
 .cand .pa{color:#38bdf8;font-variant-numeric:tabular-nums}
 .cand .pb{color:#a855f7;font-variant-numeric:tabular-nums}
-.cand .sim{flex:0 0 50px;text-align:right;font-weight:600;color:var(--accent);font-variant-numeric:tabular-nums}
+.cand .sim{flex:0 0 48px;text-align:right;font-weight:600;color:var(--accent);font-variant-numeric:tabular-nums}
 .cand .sim.hi{color:var(--ok)}
-.params{margin-top:14px;padding:12px;background:rgba(255,255,255,.03);border-radius:12px;border:1px solid var(--border)}
-.params h4{font-size:12.5px;color:var(--soft);font-weight:500;margin-bottom:10px;letter-spacing:.4px}
-.param{display:flex;align-items:center;gap:10px;margin-bottom:9px;font-size:12.5px}
+
+.params{margin-top:12px;padding:10px;background:rgba(255,255,255,.03);border-radius:10px;border:1px solid var(--border)}
+.params h4{font-size:12px;color:var(--soft);font-weight:500;margin-bottom:8px;letter-spacing:.4px}
+.param{display:flex;align-items:center;gap:8px;margin-bottom:7px;font-size:12px}
 .param:last-child{margin-bottom:0}
-.param label{flex:0 0 90px;color:var(--soft)}
-.param input[type=range]{flex:1;height:5px;-webkit-appearance:none;appearance:none;background:rgba(255,255,255,.1);border-radius:3px;outline:none}
-.param input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:20px;height:20px;border-radius:50%;background:var(--accent);cursor:pointer;box-shadow:0 0 8px var(--glow);border:none}
-.param input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:var(--accent);cursor:pointer;border:none;box-shadow:0 0 8px var(--glow)}
-.param .pv{flex:0 0 48px;text-align:right;color:var(--accent);font-variant-numeric:tabular-nums}
-.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
-.btn{background:var(--card);color:var(--text);padding:10px 16px;border:1px solid var(--border);border-radius:12px;font-size:13.5px;font-family:inherit;cursor:pointer;user-select:none;transition:transform .15s,box-shadow .2s,border-color .2s}
-.btn:hover{transform:translateY(-1px);border-color:var(--accent);box-shadow:0 0 18px var(--glow)}
-.btn:active{transform:translateY(0)}
-.btn.primary{background:var(--accent);color:#05060a;font-weight:600;border:none;box-shadow:0 0 18px var(--glow)}
-.btn.ghost{background:transparent}
-.btn:disabled{opacity:.35;cursor:not-allowed;transform:none;box-shadow:none}
+.param label{flex:0 0 82px;color:var(--soft)}
+.param input[type=range]{flex:1;height:4px;-webkit-appearance:none;appearance:none;background:rgba(255,255,255,.1);border-radius:2px;outline:none}
+.param input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:16px;height:16px;border-radius:50%;background:var(--accent);cursor:pointer;border:none;box-shadow:0 0 8px var(--glow)}
+.param input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--accent);cursor:pointer;border:none;box-shadow:0 0 8px var(--glow)}
+.param .pv{flex:0 0 42px;text-align:right;color:var(--accent);font-variant-numeric:tabular-nums}
+
+.row{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+
+#progress{position:fixed;bottom:0;left:0;right:0;background:rgba(10,10,15,.95);border-top:1px solid var(--border);padding:10px 16px;font-size:12.5px;color:var(--soft);display:none;z-index:100;backdrop-filter:blur(10px)}
+#progress.on{display:block}
+#progress .pbar{height:3px;background:rgba(255,255,255,.1);border-radius:2px;margin-top:6px;overflow:hidden}
+#progress .pfill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent-2));width:0;transition:width .3s}
+
+.empty{text-align:center;padding:30px 20px;color:var(--soft);font-size:13px;line-height:1.8}
+
 @media(max-width:600px){
-  body{padding:20px 12px 50px}
-  .param label{flex:0 0 76px;font-size:12px}
-  .btn{padding:9px 14px;font-size:13px}
-  .wavebox{height:130px}
+  body{padding:18px 12px 60px}
+  .param label{flex:0 0 70px;font-size:11.5px}
+  .btn{padding:8px 12px;font-size:12.5px}
+  .wavebox{height:120px}
+  .songhead{padding:10px 12px}
+  .songhead .title{font-size:13.5px}
 }
 </style>
 </head>
 <body>
 <div class="wrap">
 <h1>Auto Loop Finder</h1>
-<p class="sub">段落级匹配 · 移调不变 · 节拍对齐 · 边界可拖拽微调</p>
+<p class="sub">段落级匹配 · 移调不变 · 节拍对齐 · 多曲管理 · 自动保存</p>
 
 <label class="drop" id="drop" for="file">
-<div class="big">点击选择音频文件</div>
-<div class="small">支持 mp3 / m4a / wav / aac · 也可拖拽</div>
-<input type="file" id="file" accept="audio/*,.mp3,.m4a,.wav,.aac,audio/mpeg,audio/mp4">
+<div class="big">点击选择音频文件（可多选）</div>
+<div class="small">支持 mp3 / m4a / wav / aac · 也可拖拽 · 自动保存到本浏览器</div>
+<input type="file" id="file" accept="audio/*,.mp3,.m4a,.wav,.aac,audio/mpeg,audio/mp4" multiple>
 </label>
 
-<div class="namerow" id="namerow">
-<label for="nameInput">歌曲名</label>
-<input type="text" id="nameInput" placeholder="输入歌曲名…" autocomplete="off">
+<div class="globalbar">
+<div class="info" id="globalInfo">没有歌曲</div>
+<button class="btn sm" id="btnExportAll">📤 导出全部</button>
+<button class="btn sm" id="btnImport">📥 导入数据包</button>
+<button class="btn sm danger" id="btnClearAll">🗑 清空全部</button>
+<input type="file" id="importFile" accept=".lfp,.json" style="display:none">
 </div>
 
-<div class="status" id="status"></div>
 <div id="env"></div>
 <div id="audiodiag"></div>
+<div class="status" id="status"></div>
 
-<div class="panel" id="panel">
-<div class="head">
-<div><div class="title" id="pTitle">—</div><div class="meta" id="pMeta">—</div></div>
-<div class="pill" id="pPill">—</div>
-</div>
-
-<div class="wavebox" id="wavebox">
-<canvas id="wave"></canvas>
-<div class="playhead" id="playhead"></div>
-</div>
-<div class="timebar"><span id="tNow">0:00</span><span id="tTotal">0:00</span></div>
-
-<div class="seginfo" id="segInfo">点波形选段 · 拖边界手柄微调 · 点下方列表选段对</div>
-
-<div class="cands" id="cands"></div>
-
-<div class="params">
-<h4>参数调整（每首歌独立保存）</h4>
-<div class="param"><label>最短段</label><input type="range" id="pMin" min="4" max="40" step="1" value="8"><span class="pv" id="vMin">8s</span></div>
-<div class="param"><label>最长段</label><input type="range" id="pMax" min="20" max="180" step="5" value="60"><span class="pv" id="vMax">60s</span></div>
-<div class="param"><label>相似度</label><input type="range" id="pSim" min="0.5" max="0.98" step="0.01" value="0.78"><span class="pv" id="vSim">0.78</span></div>
-<div class="param"><label>边界灵敏度</label><input type="range" id="pBnd" min="0.1" max="0.7" step="0.02" value="0.28"><span class="pv" id="vBnd">0.28</span></div>
-<div class="param"><label>音高比重</label><input type="range" id="pWei" min="0" max="1" step="0.05" value="0.5"><span class="pv" id="vWei">0.50</span></div>
-</div>
-
-<div class="row">
-<button class="btn primary" id="btnLoopA">▶ 循环 A 段</button>
-<button class="btn" id="btnLoopB">▶ 循环 B 段</button>
-<button class="btn ghost" id="btnStop">■ 停止</button>
-<button class="btn ghost" id="btnTest">🔊 测试声音</button>
-</div>
-
-<div class="row">
-<button class="btn ghost" id="btnSplit">在播放头处拆分选中段</button>
-<button class="btn ghost" id="btnMergeL">与左邻合并</button>
-<button class="btn ghost" id="btnMergeR">与右邻合并</button>
-<button class="btn ghost" id="btnReset">重置边界</button>
+<div class="songlist" id="songlist">
+<div class="empty" id="empty">还没有导入歌曲<br>点击上方或拖拽 mp3 文件开始</div>
 </div>
 </div>
+
+<div id="progress">
+<div id="progressText">准备中…</div>
+<div class="pbar"><div class="pfill" id="progressFill"></div></div>
 </div>
 
 <script>
@@ -149,11 +160,6 @@ const CFG = {
   HOP_SEC: 0.10,
   FRAME_SEC: 0.20,
   NOVELTY_K: 20,
-  MIN_SEG: 8,
-  MAX_SEG: 60,
-  SIM_THRESHOLD: 0.78,
-  BOUNDARY_SENS: 0.28,
-  WEIGHT_PITCH: 0.5,
   BAND_EDGES: [62, 125, 250, 500, 1000, 2000, 4000, 8000],
   ONSET_HOP_SEC: 0.01
 };
@@ -163,12 +169,20 @@ const DEF = {
   BOUNDARY_SENS: 0.28,
   WEIGHT_PITCH: 0.5
 };
+const DB_NAME = 'loop-finder-db-v2';
+const DB_VERSION = 1;
+const STORE = 'songs';
+const EXPORT_VERSION = 1;
 
+/* ============================================================
+   工具
+   ============================================================ */
 const fmt = t => {
   t = Math.max(0, t || 0);
   return Math.floor(t / 60) + ':' + String(Math.floor(t % 60)).padStart(2, '0');
 };
 const yieldUI = () => new Promise(r => setTimeout(r, 0));
+const uuid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 
 try {
   if (navigator.audioSession && navigator.audioSession.type !== 'playback') {
@@ -181,14 +195,89 @@ try {
   const isSafari = /^((?!chrome|android).)*safari/i.test(ua);
   const isIOS = /iPad|iPhone|iPod/.test(ua);
   const hasAC = !!(window.AudioContext || window.webkitAudioContext);
-  const hasSession = !!navigator.audioSession;
+  const hasIDB = !!window.indexedDB;
   const lines = [];
   if (isIOS) lines.push('iOS');
   if (isSafari) lines.push('Safari'); else if (/chrome/i.test(ua)) lines.push('Chrome');
   lines.push(hasAC ? 'AC✓' : 'AC✗');
-  lines.push(hasSession ? 'AS✓' : 'AS✗');
+  lines.push(hasIDB ? 'IDB✓' : 'IDB✗');
   $('#env').textContent = lines.join(' · ');
 })();
+
+/* ============================================================
+   IndexedDB 封装
+   ============================================================ */
+let dbPromise = null;
+function openDB() {
+  if (dbPromise) return dbPromise;
+  dbPromise = new Promise((res, rej) => {
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onupgradeneeded = () => {
+      const db = req.result;
+      if (!db.objectStoreNames.contains(STORE)) {
+        db.createObjectStore(STORE, { keyPath: 'id' });
+      }
+    };
+    req.onsuccess = () => res(req.result);
+    req.onerror = () => rej(req.error);
+  });
+  return dbPromise;
+}
+async function dbPut(song) {
+  const db = await openDB();
+  return new Promise((res, rej) => {
+    const tx = db.transaction(STORE, 'readwrite');
+    tx.objectStore(STORE).put(song);
+    tx.oncomplete = () => res();
+    tx.onerror = () => rej(tx.error);
+  });
+}
+async function dbGetAll() {
+  const db = await openDB();
+  return new Promise((res, rej) => {
+    const tx = db.transaction(STORE, 'readonly');
+    const req = tx.objectStore(STORE).getAll();
+    req.onsuccess = () => res(req.result || []);
+    req.onerror = () => rej(req.error);
+  });
+}
+async function dbDelete(id) {
+  const db = await openDB();
+  return new Promise((res, rej) => {
+    const tx = db.transaction(STORE, 'readwrite');
+    tx.objectStore(STORE).delete(id);
+    tx.oncomplete = () => res();
+    tx.onerror = () => rej(tx.error);
+  });
+}
+async function dbClear() {
+  const db = await openDB();
+  return new Promise((res, rej) => {
+    const tx = db.transaction(STORE, 'readwrite');
+    tx.objectStore(STORE).clear();
+    tx.oncomplete = () => res();
+    tx.onerror = () => rej(tx.error);
+  });
+}
+
+/* ============================================================
+   Base64 编解码
+   ============================================================ */
+function ab2b64(ab) {
+  const bytes = new Uint8Array(ab);
+  let bin = '';
+  const chunk = 0x8000;
+  for (let i = 0; i < bytes.length; i += chunk) {
+    bin += String.fromCharCode.apply(null, bytes.subarray(i, i + chunk));
+  }
+  return btoa(bin);
+}
+function b642ab(b64) {
+  const bin = atob(b64);
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return bytes.buffer;
+}
 
 /* ============================================================
    FFT
@@ -327,7 +416,6 @@ function computeOnsetEnvelope(mono, sr) {
   const winSize = Math.round(0.03 * sr);
   const N = Math.max(1, Math.floor((mono.length - winSize) / hop) + 1);
   const env = new Float32Array(N);
-
   let prev = 0;
   for (let t = 0; t < N; t++) {
     const off = t * hop;
@@ -363,8 +451,10 @@ function frameSim(chroma, contrast, i, j) {
   return 0.6 * best + 0.4 * cSim;
 }
 
-function computeNovelty(chroma, contrast, N, K) {
+function computeNovelty(chroma, contrast, N, K, onProgress) {
   const nov = new Float32Array(N);
+  const total = Math.max(1, N - 2 * K);
+  let lastYield = 0;
   for (let t = K; t < N - K; t++) {
     let inSum = 0, inCnt = 0;
     for (let i = t - K; i < t; i++) {
@@ -391,6 +481,10 @@ function computeNovelty(chroma, contrast, N, K) {
     const b = outCnt ? outSum / outCnt : 0;
     const c = crossCnt ? crossSum / crossCnt : 0;
     nov[t] = (a + b) / 2 - c;
+
+    if (onProgress && (t - K) % 100 === 0) {
+      onProgress((t - K) / total);
+    }
   }
   return nov;
 }
@@ -525,17 +619,12 @@ function matchSegments(segs, minSec, maxSec, minSim, wPitch) {
       if (sj.dur < minSec || sj.dur > maxSec) continue;
       const durRatio = Math.min(si.dur, sj.dur) / Math.max(si.dur, sj.dur);
       if (durRatio < 0.55) continue;
-
       const pitch = tiPitchSim(si.featP, sj.featP);
       const timbre = timbreSim(si.featT, sj.featT);
       const durS = durRatio;
       const sim = wPitch * pitch + (1 - wPitch) * (0.7 * timbre + 0.3 * durS);
-
       if (sim >= minSim) {
-        pairs.push({
-          i, j, sim, pitch, timbre, dur: durS,
-          A: si, B: sj
-        });
+        pairs.push({ i, j, sim, pitch, timbre, dur: durS, A: si, B: sj });
       }
     }
   }
@@ -544,346 +633,508 @@ function matchSegments(segs, minSec, maxSec, minSim, wPitch) {
 }
 
 /* ============================================================
-   状态
+   全局状态
    ============================================================ */
-const S = {
+const G = {
   ctx: null,
-  buffer: null,
-  mono: null,
-  sr: 0,
-  duration: 0,
-  chroma: null,
-  contrast: null,
-  rms: null,
-  N: 0,
-  hopSec: 0,
-  onsetEnv: null,
-  onsetHopSec: 0,
-  novelty: null,
-  boundaries: null,
-  originalBoundaries: null,
-  segments: null,
-  pairs: null,
-  selectedPairIdx: -1,
-  selectedSegIdx: -1,
+  songs: new Map(),
+  analyzingQueue: [],
+  isAnalyzing: false
+};
+
+const PLAYER = {
   playing: false,
   mode: 'A',
+  songId: null,
   srcNode: null,
   gainNode: null,
   startCtxTime: 0,
   startOffset: 0,
   endOffset: 0,
-  rafId: null,
-  peaks: null,
-  peaksW: 0,
-  peaksH: 0,
-  fileName: '',
-  originalName: '',
-  draggingBoundary: -1
+  rafId: null
 };
 
-const paramMemory = {};
-const nameMap = (() => {
-  try { return JSON.parse(localStorage.getItem('loop-names-pro') || '{}'); }
-  catch (e) { return {}; }
-})();
-function persistNameMap() {
-  try { localStorage.setItem('loop-names-pro', JSON.stringify(nameMap)); } catch (e) {}
-}
-function loadParams(name) {
-  const s = paramMemory[name];
-  if (s) {
-    CFG.MIN_SEG = s.MIN_SEG;
-    CFG.MAX_SEG = s.MAX_SEG;
-    CFG.SIM_THRESHOLD = s.SIM_THRESHOLD;
-    CFG.BOUNDARY_SENS = s.BOUNDARY_SENS;
-    CFG.WEIGHT_PITCH = s.WEIGHT_PITCH;
-  } else {
-    Object.assign(CFG, DEF);
-  }
-}
-function saveParams(name) {
-  paramMemory[name] = {
-    MIN_SEG: CFG.MIN_SEG,
-    MAX_SEG: CFG.MAX_SEG,
-    SIM_THRESHOLD: CFG.SIM_THRESHOLD,
-    BOUNDARY_SENS: CFG.BOUNDARY_SENS,
-    WEIGHT_PITCH: CFG.WEIGHT_PITCH
-  };
-}
-
-const drop = $('#drop'), fileInput = $('#file'), statusEl = $('#status'), panel = $('#panel');
-const nameInput = $('#nameInput'), namerow = $('#namerow');
-const canvas = $('#wave'), wavebox = $('#wavebox'), playheadEl = $('#playhead');
-const audioDiag = $('#audiodiag');
-
 /* ============================================================
-   音频上下文状态显示
+   音频上下文诊断
    ============================================================ */
 function updateAudioDiag() {
-  if (!S.ctx) {
-    audioDiag.innerHTML = 'AudioContext: 未创建';
-    return;
-  }
-  const st = S.ctx.state;
+  const el = $('#audiodiag');
+  if (!G.ctx) { el.textContent = ''; return; }
+  const st = G.ctx.state;
   const cls = st === 'running' ? '' : 'bad';
-  audioDiag.innerHTML = 'AudioContext: <b class="' + cls + '">' + st + '</b>' +
-    ' · sampleRate ' + S.ctx.sampleRate;
+  el.innerHTML = 'AudioContext: <b class="' + cls + '">' + st + '</b> · ' + G.ctx.sampleRate + 'Hz';
 }
 setInterval(updateAudioDiag, 1000);
-updateAudioDiag();
 
-/* ============================================================
-   文件导入
-   ============================================================ */
-drop.addEventListener('dragover', e => { e.preventDefault(); drop.classList.add('over'); });
-drop.addEventListener('dragleave', () => drop.classList.remove('over'));
-drop.addEventListener('drop', e => {
-  e.preventDefault(); drop.classList.remove('over');
-  const f = e.dataTransfer.files[0];
-  if (f) prepareFile(f);
-});
-fileInput.addEventListener('change', e => {
-  const f = e.target.files && e.target.files[0];
-  if (!f) { statusEl.className = 'status err'; statusEl.textContent = '未获取到文件'; return; }
-  if (!S.ctx) {
-    const AC = window.AudioContext || window.webkitAudioContext;
-    if (!AC) { statusEl.className = 'status err'; statusEl.textContent = '浏览器不支持 AudioContext'; return; }
-    try { S.ctx = new AC(); } catch (err) {
-      statusEl.className = 'status err'; statusEl.textContent = 'AudioContext 创建失败：' + err.message; return;
-    }
+function tryResumeSync() {
+  if (!G.ctx) return;
+  if (G.ctx.state === 'suspended') {
+    try { G.ctx.resume(); } catch (e) {}
   }
-  if (S.ctx.state === 'suspended') { try { S.ctx.resume(); } catch (err) {} }
-  prepareFile(f);
-});
-
-nameInput.addEventListener('input', e => {
-  const newName = (e.target.value || '').trim() || '未命名';
-  if (newName === S.fileName) return;
-  const oldName = S.fileName;
-  if (oldName && paramMemory[oldName]) {
-    paramMemory[newName] = paramMemory[oldName];
-    delete paramMemory[oldName];
-  }
-  if (S.originalName) {
-    nameMap[S.originalName] = newName;
-    persistNameMap();
-  }
-  S.fileName = newName;
-  saveParams(newName);
-  if (S.segments) $('#pTitle').textContent = newName;
-});
-
-function prepareFile(file) {
-  stopPlay();
-  S.fileName = '';
-  S.originalName = file.name.replace(/\.[^.]+$/, '');
-  const customName = (nameMap[S.originalName] || S.originalName) || '未命名';
-  S.fileName = customName;
-  nameInput.value = customName;
-  namerow.classList.add('on');
-  loadParams(customName);
-  syncSliders();
-  analyzeFile(file);
 }
-
-async function readFileAsArrayBuffer(file) {
-  return new Promise((res, rej) => {
-    const reader = new FileReader();
-    reader.onload = () => res(reader.result);
-    reader.onerror = () => rej(new Error('读取文件失败：' + (reader.error && reader.error.message || '未知')));
-    try { reader.readAsArrayBuffer(file); } catch (e) { rej(e); }
+function ensureCtxRunning() {
+  if (!G.ctx) return Promise.resolve(false);
+  if (G.ctx.state === 'running') return Promise.resolve(true);
+  return new Promise((resolve) => {
+    let settled = false;
+    const done = (ok) => { if (!settled) { settled = true; resolve(ok); } };
+    try {
+      const p = G.ctx.resume();
+      if (p && typeof p.then === 'function') {
+        p.then(() => done(G.ctx.state === 'running')).catch(() => done(false));
+      } else {
+        setTimeout(() => done(G.ctx.state === 'running'), 50);
+      }
+    } catch (e) { done(false); }
+    setTimeout(() => done(G.ctx.state === 'running'), 800);
   });
 }
 
-async function decodeWithFallback(file, ctx) {
-  const buf = await readFileAsArrayBuffer(file);
-  try {
-    return await new Promise((res, rej) => {
-      try { ctx.decodeAudioData(buf, res, rej); } catch (e) { rej(e); }
+/* ============================================================
+   进度显示
+   ============================================================ */
+function showProgress(text, ratio) {
+  const p = $('#progress');
+  p.classList.add('on');
+  $('#progressText').textContent = text || '';
+  $('#progressFill').style.width = (Math.max(0, Math.min(1, ratio || 0)) * 100) + '%';
+}
+function hideProgress() {
+  setTimeout(() => $('#progress').classList.remove('on'), 600);
+}
+
+/* ============================================================
+   全局状态显示
+   ============================================================ */
+function updateGlobalInfo() {
+  const n = G.songs.size;
+  const el = $('#globalInfo');
+  if (n === 0) {
+    el.textContent = '没有歌曲';
+    $('#empty').style.display = 'block';
+  } else {
+    let totalDur = 0, totalPairs = 0;
+    G.songs.forEach(s => {
+      totalDur += s.duration || 0;
+      totalPairs += (s.pairs ? s.pairs.length : 0);
     });
-  } catch (e1) {
-    try {
-      const OAC = window.OfflineAudioContext || window.webkitOfflineAudioContext;
-      const off = new OAC(2, 44100, 44100);
-      return await new Promise((res, rej) => {
-        try { off.decodeAudioData(buf, res, rej); } catch (e) { rej(e); }
-      });
-    } catch (e2) {
-      throw new Error((e1 && e1.message) || String(e1) || 'decodeAudioData 失败');
-    }
+    el.textContent = n + ' 首 · 总时长 ' + fmt(totalDur) + ' · 匹配对 ' + totalPairs;
+    $('#empty').style.display = 'none';
   }
 }
 
 /* ============================================================
-   分析主流程
+   歌曲对象
    ============================================================ */
-async function analyzeFile(file) {
-  const mb = (file.size / 1048576).toFixed(2);
-  statusEl.className = 'status';
-  statusEl.textContent = '正在解码音频…（' + mb + 'MB）';
-  panel.classList.remove('on');
-  try {
-    if (!S.ctx) {
-      const AC = window.AudioContext || window.webkitAudioContext;
-      S.ctx = new AC();
-    }
-    if (S.ctx.state === 'suspended') { try { await S.ctx.resume(); } catch (e) {} }
-    const ab = await decodeWithFallback(file, S.ctx);
-    S.buffer = ab;
-    S.sr = ab.sampleRate;
-    S.duration = ab.duration;
-    S.mono = toMono(ab);
-
-    statusEl.textContent = '正在提取音级特征（Chroma）…'; await yieldUI();
-    const feat = extractFeatures(S.mono, S.sr);
-    S.chroma = feat.chroma;
-    S.contrast = feat.contrast;
-    S.rms = feat.rms;
-    S.N = feat.N;
-    S.hopSec = feat.hopSec;
-
-    statusEl.textContent = '正在计算起音包络…'; await yieldUI();
-    const onset = computeOnsetEnvelope(S.mono, S.sr);
-    S.onsetEnv = onset.env;
-    S.onsetHopSec = onset.hopSec;
-
-    statusEl.textContent = '正在做结构分析…（可能需要 10-30 秒）';
-    await yieldUI();
-    S.novelty = computeNovelty(S.chroma, S.contrast, S.N, CFG.NOVELTY_K);
-
-    await runStructure();
-  } catch (err) {
-    console.error(err);
-    statusEl.className = 'status err';
-    statusEl.textContent = '分析失败：' + ((err && err.message) || err);
-  }
+function createSongRecord(file) {
+  return {
+    id: uuid(),
+    originalName: file.name.replace(/\.[^.]+$/, ''),
+    fileName: file.name.replace(/\.[^.]+$/, ''),
+    fileSize: file.size,
+    mimeType: file.type || '',
+    addedAt: Date.now(),
+    duration: 0,
+    sr: 0,
+    // 音频数据
+    audioData: null, // ArrayBuffer
+    // 特征
+    chroma: null,
+    contrast: null,
+    rms: null,
+    N: 0,
+    hopSec: 0,
+    onsetEnv: null,
+    onsetHopSec: 0,
+    // 分析结果
+    novelty: null,
+    boundaries: null,
+    originalBoundaries: null,
+    segments: null,
+    pairs: null,
+    // 参数
+    params: { ...DEF },
+    // 运行时（不存储）
+    buffer: null,
+    mono: null,
+    selectedPairIdx: -1,
+    selectedSegIdx: -1,
+    expanded: false,
+    // UI
+    ui: null,
+    // 分析状态
+    analyzeState: 'pending' // pending | analyzing | done | error
+  };
 }
 
-async function runStructure() {
-  if (!S.novelty) return;
-  const minFrames = Math.round(CFG.MIN_SEG / S.hopSec);
-  let bounds = findBoundaryPeaks(S.novelty, S.N, minFrames, CFG.BOUNDARY_SENS);
-  bounds = snapBoundariesToOnsets(bounds, S.onsetEnv, S.onsetHopSec, S.hopSec, S.N);
-  if (!S.originalBoundaries || S.originalBoundaries.length < 2) {
-    S.originalBoundaries = bounds.slice();
+/* ============================================================
+   分析流程
+   ============================================================ */
+async function analyzeSong(song, onProgress) {
+  if (!G.ctx) {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    G.ctx = new AC();
   }
-  S.boundaries = bounds;
+  if (G.ctx.state === 'suspended') { try { await G.ctx.resume(); } catch (e) {} }
 
-  S.segments = buildSegments(S.chroma, S.contrast, S.rms, S.boundaries, S.hopSec);
+  // 1. Decode（如果还没解码）
+  if (!song.buffer && song.audioData) {
+    onProgress('正在解码音频…', 0.05);
+    const ab = await new Promise((res, rej) => {
+      try { G.ctx.decodeAudioData(song.audioData.slice(0), res, rej); }
+      catch (e) { rej(e); }
+    });
+    song.buffer = ab;
+    song.sr = ab.sampleRate;
+    song.duration = ab.duration;
+    song.mono = toMono(ab);
+  }
 
-  S.pairs = matchSegments(
-    S.segments, CFG.MIN_SEG, CFG.MAX_SEG,
-    CFG.SIM_THRESHOLD, CFG.WEIGHT_PITCH
+  // 2. 特征
+  onProgress('提取特征…', 0.15);
+  await yieldUI();
+  const feat = extractFeatures(song.mono, song.sr);
+  song.chroma = feat.chroma;
+  song.contrast = feat.contrast;
+  song.rms = feat.rms;
+  song.N = feat.N;
+  song.hopSec = feat.hopSec;
+
+  onProgress('计算起音…', 0.35);
+  await yieldUI();
+  const onset = computeOnsetEnvelope(song.mono, song.sr);
+  song.onsetEnv = onset.env;
+  song.onsetHopSec = onset.hopSec;
+
+  // 3. Novelty
+  onProgress('结构分析…（可能较慢）', 0.45);
+  await yieldUI();
+  song.novelty = computeNovelty(song.chroma, song.contrast, song.N, CFG.NOVELTY_K);
+
+  // 4. 边界
+  onProgress('检测边界…', 0.85);
+  await yieldUI();
+  const minFrames = Math.round(song.params.MIN_SEG / song.hopSec);
+  let bounds = findBoundaryPeaks(song.novelty, song.N, minFrames, song.params.BOUNDARY_SENS);
+  bounds = snapBoundariesToOnsets(bounds, song.onsetEnv, song.onsetHopSec, song.hopSec, song.N);
+  song.boundaries = bounds;
+  song.originalBoundaries = bounds.slice();
+
+  // 5. 匹配
+  onProgress('匹配段落…', 0.95);
+  await yieldUI();
+  recomputeSegments(song);
+
+  song.analyzeState = 'done';
+  onProgress('完成', 1);
+}
+
+function recomputeSegments(song) {
+  song.segments = buildSegments(song.chroma, song.contrast, song.rms, song.boundaries, song.hopSec);
+  song.pairs = matchSegments(
+    song.segments,
+    song.params.MIN_SEG,
+    song.params.MAX_SEG,
+    song.params.SIM_THRESHOLD,
+    song.params.WEIGHT_PITCH
   );
-  S.selectedPairIdx = -1;
-  S.selectedSegIdx = -1;
-
-  renderPanel();
-  renderCands();
-  drawWave();
-
-  if (S.pairs.length > 0) {
-    selectPair(0);
-    statusEl.className = 'status ok';
-    statusEl.textContent = '分析完成：' + (S.boundaries.length - 1) + ' 个段落 · ' + S.pairs.length + ' 个匹配对';
-  } else {
-    statusEl.className = 'status err';
-    statusEl.textContent = '未找到相似段对。可调低相似度、调高边界灵敏度、或调整音高比重后重试。';
-  }
-}
-
-async function recomputeAll() {
-  if (!S.chroma) return;
-  S.segments = buildSegments(S.chroma, S.contrast, S.rms, S.boundaries, S.hopSec);
-  S.pairs = matchSegments(S.segments, CFG.MIN_SEG, CFG.MAX_SEG, CFG.SIM_THRESHOLD, CFG.WEIGHT_PITCH);
-  if (S.pairs.length > 0) {
-    selectPair(Math.min(S.selectedPairIdx < 0 ? 0 : S.selectedPairIdx, S.pairs.length - 1));
-  } else {
-    S.selectedPairIdx = -1;
-    renderCands();
-    drawWave();
-  }
-}
-
-async function redoBoundaries() {
-  if (!S.novelty) return;
-  const minFrames = Math.round(CFG.MIN_SEG / S.hopSec);
-  let bounds = findBoundaryPeaks(S.novelty, S.N, minFrames, CFG.BOUNDARY_SENS);
-  bounds = snapBoundariesToOnsets(bounds, S.onsetEnv, S.onsetHopSec, S.hopSec, S.N);
-  S.boundaries = bounds;
-  S.originalBoundaries = bounds.slice();
-  await recomputeAll();
+  if (song.selectedPairIdx >= song.pairs.length) song.selectedPairIdx = song.pairs.length > 0 ? 0 : -1;
+  if (song.selectedPairIdx < 0 && song.pairs.length > 0) song.selectedPairIdx = 0;
 }
 
 /* ============================================================
-   面板渲染
+   分析队列（串行）
    ============================================================ */
-function renderPanel() {
-  panel.classList.add('on');
-  $('#pTitle').textContent = S.fileName || '未命名';
-  $('#pMeta').textContent =
-    fmt(S.duration) + ' · ' + (S.boundaries.length - 1) + ' 段 · ' +
-    (S.pairs ? S.pairs.length : 0) + ' 匹配对';
-  $('#tTotal').textContent = fmt(S.duration);
+function enqueueAnalyze(song) {
+  G.analyzingQueue.push(song);
+  if (!G.isAnalyzing) runQueue();
 }
 
-function renderCands() {
-  const box = $('#cands');
-  if (!S.pairs || S.pairs.length === 0) {
+async function runQueue() {
+  G.isAnalyzing = true;
+  while (G.analyzingQueue.length > 0) {
+    const song = G.analyzingQueue.shift();
+    if (!G.songs.has(song.id)) continue; // 已被删除
+    song.analyzeState = 'analyzing';
+    renderSongCard(song);
+    try {
+      await analyzeSong(song, (text, ratio) => {
+        showProgress('[' + song.fileName + '] ' + text, ratio);
+      });
+      await persistSong(song);
+      renderSongCard(song);
+      updateGlobalInfo();
+    } catch (err) {
+      console.error(err);
+      song.analyzeState = 'error';
+      song.errorMsg = (err && err.message) || String(err);
+      renderSongCard(song);
+    }
+  }
+  G.isAnalyzing = false;
+  hideProgress();
+}
+
+/* ============================================================
+   持久化
+   ============================================================ */
+async function persistSong(song) {
+  if (!window.indexedDB) return;
+  // 不存 buffer/mono/UI，只存必要数据
+  const record = {
+    id: song.id,
+    originalName: song.originalName,
+    fileName: song.fileName,
+    fileSize: song.fileSize,
+    mimeType: song.mimeType,
+    addedAt: song.addedAt,
+    duration: song.duration,
+    sr: song.sr,
+    audioData: song.audioData,
+    chroma: song.chroma,
+    contrast: song.contrast,
+    rms: song.rms,
+    N: song.N,
+    hopSec: song.hopSec,
+    onsetEnv: song.onsetEnv,
+    onsetHopSec: song.onsetHopSec,
+    novelty: song.novelty,
+    boundaries: song.boundaries,
+    originalBoundaries: song.originalBoundaries,
+    segments: song.segments,
+    pairs: song.pairs,
+    params: song.params,
+    selectedPairIdx: song.selectedPairIdx,
+    selectedSegIdx: song.selectedSegIdx,
+    expanded: song.expanded,
+    analyzeState: song.analyzeState
+  };
+  try {
+    await dbPut(record);
+  } catch (e) {
+    console.error('持久化失败', e);
+  }
+}
+
+/* ============================================================
+   UI 渲染：歌曲卡片
+   ============================================================ */
+function ensureSongUI(song) {
+  if (song.ui) return song.ui;
+  const card = document.createElement('div');
+  card.className = 'songcard';
+  card.dataset.id = song.id;
+  card.innerHTML = `
+    <div class="songhead">
+      <span class="chev">▶</span>
+      <div class="info">
+        <div class="title"></div>
+        <div class="meta"></div>
+      </div>
+      <span class="pairs"></span>
+      <div class="acts">
+        <button class="iconbtn exp" title="导出这首歌">📤</button>
+        <button class="iconbtn del" title="删除">×</button>
+      </div>
+    </div>
+    <div class="songbody">
+      <div class="bodystatus"></div>
+      <div class="namerow">
+        <label>歌曲名</label>
+        <input type="text" class="nameinput" autocomplete="off">
+      </div>
+      <div class="wavebox">
+        <canvas></canvas>
+        <div class="playhead"></div>
+      </div>
+      <div class="timebar"><span class="tNow">0:00</span><span class="tTotal">0:00</span></div>
+      <div class="seginfo">点波形选段 · 拖边界手柄微调 · 点下方列表选段对</div>
+      <div class="cands"></div>
+      <div class="params">
+        <h4>参数（自动保存）</h4>
+        <div class="param"><label>最短段</label><input type="range" class="pMin" min="4" max="40" step="1"><span class="pv vMin"></span></div>
+        <div class="param"><label>最长段</label><input type="range" class="pMax" min="20" max="180" step="5"><span class="pv vMax"></span></div>
+        <div class="param"><label>相似度</label><input type="range" class="pSim" min="0.5" max="0.98" step="0.01"><span class="pv vSim"></span></div>
+        <div class="param"><label>边界灵敏度</label><input type="range" class="pBnd" min="0.1" max="0.7" step="0.02"><span class="pv vBnd"></span></div>
+        <div class="param"><label>音高比重</label><input type="range" class="pWei" min="0" max="1" step="0.05"><span class="pv vWei"></span></div>
+      </div>
+      <div class="row">
+        <button class="btn primary btnLoopA">▶ 循环 A 段</button>
+        <button class="btn btnLoopB">▶ 循环 B 段</button>
+        <button class="btn btnStop">■ 停止</button>
+        <button class="btn btnTest">🔊 测试声音</button>
+      </div>
+      <div class="row">
+        <button class="btn btnSplit">拆分</button>
+        <button class="btn btnMergeL">合并左邻</button>
+        <button class="btn btnMergeR">合并右邻</button>
+        <button class="btn btnReset">重置边界</button>
+      </div>
+    </div>
+  `;
+  song.ui = {
+    card,
+    head: card.querySelector('.songhead'),
+    title: card.querySelector('.title'),
+    meta: card.querySelector('.meta'),
+    pairs: card.querySelector('.pairs'),
+    chev: card.querySelector('.chev'),
+    bodyStatus: card.querySelector('.bodystatus'),
+    nameInput: card.querySelector('.nameinput'),
+    wavebox: card.querySelector('.wavebox'),
+    canvas: card.querySelector('canvas'),
+    playhead: card.querySelector('.playhead'),
+    tNow: card.querySelector('.tNow'),
+    tTotal: card.querySelector('.tTotal'),
+    segInfo: card.querySelector('.seginfo'),
+    cands: card.querySelector('.cands'),
+    pMin: card.querySelector('.pMin'),
+    pMax: card.querySelector('.pMax'),
+    pSim: card.querySelector('.pSim'),
+    pBnd: card.querySelector('.pBnd'),
+    pWei: card.querySelector('.pWei'),
+    vMin: card.querySelector('.vMin'),
+    vMax: card.querySelector('.vMax'),
+    vSim: card.querySelector('.vSim'),
+    vBnd: card.querySelector('.vBnd'),
+    vWei: card.querySelector('.vWei'),
+    btnLoopA: card.querySelector('.btnLoopA'),
+    btnLoopB: card.querySelector('.btnLoopB'),
+    btnStop: card.querySelector('.btnStop'),
+    btnTest: card.querySelector('.btnTest'),
+    btnSplit: card.querySelector('.btnSplit'),
+    btnMergeL: card.querySelector('.btnMergeL'),
+    btnMergeR: card.querySelector('.btnMergeR'),
+    btnReset: card.querySelector('.btnReset'),
+    btnExp: card.querySelector('.exp'),
+    btnDel: card.querySelector('.del')
+  };
+  bindSongEvents(song);
+  return song.ui;
+}
+
+function renderSongCard(song) {
+  const ui = ensureSongUI(song);
+  const card = ui.card;
+
+  // 头部信息
+  ui.title.textContent = song.fileName || song.originalName || '未命名';
+  const durStr = song.duration ? fmt(song.duration) : '—';
+  const sizeStr = song.fileSize ? (song.fileSize / 1048576).toFixed(1) + 'MB' : '';
+  const stateStr = song.analyzeState === 'analyzing' ? '分析中…'
+                  : song.analyzeState === 'error' ? '分析失败'
+                  : song.analyzeState === 'done' ? '' : '等待分析';
+  ui.meta.textContent = [durStr, sizeStr, stateStr].filter(Boolean).join(' · ');
+  if (song.pairs && song.pairs.length > 0) {
+    ui.pairs.textContent = song.pairs.length + ' 对';
+    ui.pairs.classList.remove('empty');
+  } else {
+    ui.pairs.textContent = '';
+  }
+
+  // 展开状态
+  card.classList.toggle('expanded', song.expanded);
+
+  // 名称输入
+  if (ui.nameInput.value !== song.fileName) {
+    ui.nameInput.value = song.fileName;
+  }
+
+  // 状态行
+  if (song.analyzeState === 'analyzing') {
+    ui.bodyStatus.textContent = '正在分析…';
+    ui.bodyStatus.className = 'bodystatus';
+  } else if (song.analyzeState === 'error') {
+    ui.bodyStatus.textContent = '分析失败：' + (song.errorMsg || '');
+    ui.bodyStatus.className = 'bodystatus err';
+  } else if (song.analyzeState === 'done') {
+    ui.bodyStatus.textContent = '完成 · ' + (song.boundaries ? song.boundaries.length - 1 : 0) + ' 段 · ' + (song.pairs ? song.pairs.length : 0) + ' 个匹配对';
+    ui.bodyStatus.className = 'bodystatus ok';
+  } else {
+    ui.bodyStatus.textContent = '等待分析…';
+    ui.bodyStatus.className = 'bodystatus';
+  }
+
+  // 参数滑块
+  ui.pMin.value = song.params.MIN_SEG; ui.vMin.textContent = song.params.MIN_SEG + 's';
+  ui.pMax.value = song.params.MAX_SEG; ui.vMax.textContent = song.params.MAX_SEG + 's';
+  ui.pSim.value = song.params.SIM_THRESHOLD; ui.vSim.textContent = song.params.SIM_THRESHOLD.toFixed(2);
+  ui.pBnd.value = song.params.BOUNDARY_SENS; ui.vBnd.textContent = song.params.BOUNDARY_SENS.toFixed(2);
+  ui.pWei.value = song.params.WEIGHT_PITCH; ui.vWei.textContent = song.params.WEIGHT_PITCH.toFixed(2);
+
+  // 时间
+  ui.tTotal.textContent = song.duration ? fmt(song.duration) : '0:00';
+
+  // 播放按钮
+  const isPlayingThis = PLAYER.playing && PLAYER.songId === song.id;
+  ui.btnLoopA.textContent = (isPlayingThis && PLAYER.mode === 'A') ? '❚❚ 停止循环' : '▶ 循环 A 段';
+  ui.btnLoopB.textContent = (isPlayingThis && PLAYER.mode === 'B') ? '❚❚ 停止循环' : '▶ 循环 B 段';
+  ui.btnStop.disabled = !isPlayingThis;
+
+  // 展开时渲染波形和候选
+  if (song.expanded && song.analyzeState === 'done') {
+    renderCands(song);
+    // 用 setTimeout 等 DOM 尺寸确定
+    setTimeout(() => drawWaveFor(song), 10);
+  }
+}
+
+function renderCands(song) {
+  const box = song.ui.cands;
+  if (!song.pairs || song.pairs.length === 0) {
     box.innerHTML = '';
     return;
   }
-  const maxShow = Math.min(S.pairs.length, 40);
+  const maxShow = Math.min(song.pairs.length, 40);
   box.innerHTML = '<h4>候选段对（按相似度排序）</h4>';
   for (let k = 0; k < maxShow; k++) {
-    const p = S.pairs[k];
+    const p = song.pairs[k];
     const el = document.createElement('div');
-    el.className = 'cand' + (k === S.selectedPairIdx ? ' sel' : '');
+    el.className = 'cand' + (k === song.selectedPairIdx ? ' sel' : '');
     el.innerHTML =
       '<div class="pair">' +
         '<span class="pa">A · ' + fmt(p.A.startSec) + ' → ' + fmt(p.A.endSec) + ' (' + p.A.dur.toFixed(1) + 's)</span>' +
         '<span class="pb">B · ' + fmt(p.B.startSec) + ' → ' + fmt(p.B.endSec) + ' (' + p.B.dur.toFixed(1) + 's)</span>' +
       '</div>' +
       '<span class="sim' + (p.sim > 0.9 ? ' hi' : '') + '">' + (p.sim * 100).toFixed(0) + '%</span>';
-    el.addEventListener('click', () => selectPair(k));
+    el.addEventListener('click', () => {
+      song.selectedPairIdx = k;
+      song.selectedSegIdx = p.i;
+      renderCands(song);
+      drawWaveFor(song);
+      updateSegInfo(song);
+      if (PLAYER.playing && PLAYER.songId === song.id) stopPlay();
+      persistSong(song);
+    });
     box.appendChild(el);
   }
 }
 
-function selectPair(idx) {
-  if (!S.pairs || idx < 0 || idx >= S.pairs.length) return;
-  S.selectedPairIdx = idx;
-  const p = S.pairs[idx];
-  S.selectedSegIdx = p.i;
-  renderCands();
-  drawWave();
-  updateSegInfo();
-  $('#pPill').textContent = fmt(p.A.startSec) + ' → ' + fmt(p.A.endSec) + ' / ' + fmt(p.B.startSec) + ' → ' + fmt(p.B.endSec);
-  if (S.playing) stopPlay();
-}
-
-function updateSegInfo() {
-  const el = $('#segInfo');
-  if (S.selectedPairIdx >= 0 && S.pairs) {
-    const p = S.pairs[S.selectedPairIdx];
-    el.innerHTML = '已选：<b>A 段</b> ' + fmt(p.A.startSec) + ' → ' + fmt(p.A.endSec) +
-      ' · <b>B 段</b> ' + fmt(p.B.startSec) + ' → ' + fmt(p.B.endSec) +
-      ' · 相似度 ' + (p.sim * 100).toFixed(1) + '%' +
+function updateSegInfo(song) {
+  const el = song.ui.segInfo;
+  if (song.selectedPairIdx >= 0 && song.pairs && song.pairs[song.selectedPairIdx]) {
+    const p = song.pairs[song.selectedPairIdx];
+    el.innerHTML = '已选：<b>A</b> ' + fmt(p.A.startSec) + ' → ' + fmt(p.A.endSec) +
+      ' · <b>B</b> ' + fmt(p.B.startSec) + ' → ' + fmt(p.B.endSec) +
+      ' · ' + (p.sim * 100).toFixed(1) + '%' +
       ' (音高 ' + (p.pitch * 100).toFixed(0) + '% / 音色 ' + (p.timbre * 100).toFixed(0) + '%)';
-  } else if (S.selectedSegIdx >= 0 && S.segments && S.segments[S.selectedSegIdx]) {
-    const s = S.segments[S.selectedSegIdx];
-    el.innerHTML = '已选段 #' + S.selectedSegIdx + '：' + fmt(s.startSec) + ' → ' + fmt(s.endSec) + ' (' + s.dur.toFixed(1) + 's)';
+  } else if (song.selectedSegIdx >= 0 && song.segments && song.segments[song.selectedSegIdx]) {
+    const s = song.segments[song.selectedSegIdx];
+    el.innerHTML = '段 #' + song.selectedSegIdx + '：' + fmt(s.startSec) + ' → ' + fmt(s.endSec) + ' (' + s.dur.toFixed(1) + 's)';
   } else {
     el.textContent = '点波形选段 · 拖边界手柄微调 · 点下方列表选段对';
   }
 }
 
 /* ============================================================
-   波形绘制
+   绘制
    ============================================================ */
-function computePeaks(width) {
-  const mono = S.mono, len = mono.length, step = len / width;
+function computePeaksFor(song, width) {
+  // 如果有缓存的 peaks 就用
+  if (song._peaks && song._peaksW === width) return song._peaks;
+  const mono = song.mono;
+  if (!mono) return null;
+  const len = mono.length, step = len / width;
   const peaks = new Float32Array(width * 2);
   for (let x = 0; x < width; x++) {
     const s = Math.floor(x * step);
@@ -897,65 +1148,65 @@ function computePeaks(width) {
     peaks[x * 2] = mn;
     peaks[x * 2 + 1] = mx;
   }
+  song._peaks = peaks;
+  song._peaksW = width;
   return peaks;
 }
 
-function drawWave() {
-  if (!S.mono) return;
-  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+function drawWaveFor(song) {
+  if (!song.expanded) return;
+  if (!song.mono) return;
+  const ui = song.ui;
+  const wavebox = ui.wavebox;
+  const canvas = ui.canvas;
   const W = wavebox.clientWidth;
   const H = wavebox.clientHeight;
   if (W < 2 || H < 2) return;
+
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
   canvas.width = W * dpr;
   canvas.height = H * dpr;
   const ctx = canvas.getContext('2d');
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.clearRect(0, 0, W, H);
-
   ctx.fillStyle = 'rgba(255,255,255,0.02)';
   ctx.fillRect(0, 0, W, H);
 
-  if (!S.peaks || S.peaksW !== W || S.peaksH !== H) {
-    S.peaks = computePeaks(W);
-    S.peaksW = W;
-    S.peaksH = H;
-  }
+  const peaks = computePeaksFor(song, W);
+  if (!peaks) return;
 
-  if (S.selectedPairIdx >= 0 && S.pairs) {
-    const p = S.pairs[S.selectedPairIdx];
-    const ax1 = p.A.startSec / S.duration * W;
-    const ax2 = p.A.endSec / S.duration * W;
-    const bx1 = p.B.startSec / S.duration * W;
-    const bx2 = p.B.endSec / S.duration * W;
+  // 高亮段对
+  if (song.selectedPairIdx >= 0 && song.pairs && song.pairs[song.selectedPairIdx]) {
+    const p = song.pairs[song.selectedPairIdx];
+    const ax1 = p.A.startSec / song.duration * W;
+    const ax2 = p.A.endSec / song.duration * W;
+    const bx1 = p.B.startSec / song.duration * W;
+    const bx2 = p.B.endSec / song.duration * W;
     ctx.fillStyle = 'rgba(56,189,248,0.18)';
     ctx.fillRect(ax1, 0, ax2 - ax1, H);
     ctx.fillStyle = 'rgba(168,85,247,0.18)';
     ctx.fillRect(bx1, 0, bx2 - bx1, H);
-  } else if (S.selectedSegIdx >= 0 && S.segments && S.segments[S.selectedSegIdx]) {
-    const s = S.segments[S.selectedSegIdx];
-    const x1 = s.startSec / S.duration * W;
-    const x2 = s.endSec / S.duration * W;
-    ctx.fillStyle = 'rgba(56,189,248,0.15)';
-    ctx.fillRect(x1, 0, x2 - x1, H);
   }
 
+  // 波形
   const mid = H / 2;
   const grad = ctx.createLinearGradient(0, 0, W, 0);
   grad.addColorStop(0, '#38bdf8');
   grad.addColorStop(1, '#a855f7');
   ctx.fillStyle = grad;
   for (let x = 0; x < W; x++) {
-    const mn = S.peaks[x * 2], mx = S.peaks[x * 2 + 1];
+    const mn = peaks[x * 2], mx = peaks[x * 2 + 1];
     const y1 = mid - mx * mid * 0.9;
     const y2 = mid - mn * mid * 0.9;
     ctx.fillRect(x, y1, 1, Math.max(1, y2 - y1));
   }
 
-  if (S.boundaries && S.boundaries.length > 2) {
+  // 边界
+  if (song.boundaries && song.boundaries.length > 2 && song.N > 0) {
     ctx.strokeStyle = 'rgba(255,255,255,0.35)';
     ctx.lineWidth = 1;
-    for (let i = 1; i < S.boundaries.length - 1; i++) {
-      const x = S.boundaries[i] / S.N * W;
+    for (let i = 1; i < song.boundaries.length - 1; i++) {
+      const x = song.boundaries[i] / song.N * W;
       ctx.beginPath();
       ctx.moveTo(x, 0);
       ctx.lineTo(x, H);
@@ -971,13 +1222,14 @@ function drawWave() {
     }
   }
 
-  if (S.selectedPairIdx >= 0 && S.pairs) {
-    const p = S.pairs[S.selectedPairIdx];
+  // 段对边界加粗
+  if (song.selectedPairIdx >= 0 && song.pairs && song.pairs[song.selectedPairIdx]) {
+    const p = song.pairs[song.selectedPairIdx];
     const marks = [
-      [p.A.startSec / S.duration * W, '#38bdf8'],
-      [p.A.endSec / S.duration * W, '#38bdf8'],
-      [p.B.startSec / S.duration * W, '#a855f7'],
-      [p.B.endSec / S.duration * W, '#a855f7']
+      [p.A.startSec / song.duration * W, '#38bdf8'],
+      [p.A.endSec / song.duration * W, '#38bdf8'],
+      [p.B.startSec / song.duration * W, '#a855f7'],
+      [p.B.endSec / song.duration * W, '#a855f7']
     ];
     ctx.lineWidth = 2;
     for (const [x, color] of marks) {
@@ -990,432 +1242,773 @@ function drawWave() {
   }
 }
 
-/* ============================================================
-   波形交互
-   ============================================================ */
-wavebox.addEventListener('pointerdown', e => {
-  if (!S.mono) return;
-  e.preventDefault();
-  const rect = wavebox.getBoundingClientRect();
-  const x = e.clientX - rect.left;
-
-  const W = rect.width;
-  const hitRadius = 14;
-  let hitIdx = -1;
-  let bestDist = hitRadius;
-  if (S.boundaries) {
-    for (let i = 1; i < S.boundaries.length - 1; i++) {
-      const bx = S.boundaries[i] / S.N * W;
-      const d = Math.abs(bx - x);
-      if (d < bestDist) {
-        bestDist = d;
-        hitIdx = i;
-      }
+function redrawAllWaves() {
+  G.songs.forEach(song => {
+    if (song.expanded && song.analyzeState === 'done') {
+      drawWaveFor(song);
     }
-  }
-
-  if (hitIdx > 0) {
-    S.draggingBoundary = hitIdx;
-    try { wavebox.setPointerCapture(e.pointerId); } catch (err) {}
-    return;
-  }
-
-  const pct = Math.max(0, Math.min(1, x / W));
-  const t = pct * S.duration;
-  playheadEl.classList.add('on');
-  playheadEl.style.left = (pct * 100) + '%';
-  $('#tNow').textContent = fmt(t);
-
-  if (S.segments) {
-    for (let k = 0; k < S.segments.length; k++) {
-      const s = S.segments[k];
-      if (t >= s.startSec && t <= s.endSec) {
-        S.selectedSegIdx = k;
-        if (S.pairs) {
-          let found = -1;
-          for (let p = 0; p < S.pairs.length; p++) {
-            if (S.pairs[p].i === k || S.pairs[p].j === k) { found = p; break; }
-          }
-          if (found >= 0) {
-            S.selectedPairIdx = found;
-            renderCands();
-          }
-        }
-        drawWave();
-        updateSegInfo();
-        break;
-      }
-    }
-  }
-});
-
-wavebox.addEventListener('pointermove', e => {
-  if (S.draggingBoundary < 0) return;
-  e.preventDefault();
-  const rect = wavebox.getBoundingClientRect();
-  const x = Math.max(0, Math.min(rect.width, e.clientX - rect.left));
-  const t = x / rect.width * S.duration;
-  const newFrame = Math.round(t / S.hopSec);
-  const idx = S.draggingBoundary;
-  const prevFrame = S.boundaries[idx - 1];
-  const nextFrame = S.boundaries[idx + 1];
-  const minGap = Math.round(2 / S.hopSec);
-  const clamped = Math.max(prevFrame + minGap, Math.min(nextFrame - minGap, newFrame));
-  S.boundaries[idx] = clamped;
-  drawWave();
-});
-
-wavebox.addEventListener('pointerup', async e => {
-  if (S.draggingBoundary >= 0) {
-    S.draggingBoundary = -1;
-    try { wavebox.releasePointerCapture(e.pointerId); } catch (err) {}
-    await recomputeAll();
-    statusEl.className = 'status ok';
-    statusEl.textContent = '边界已调整，重新匹配完成';
-  }
-});
-
-wavebox.addEventListener('pointercancel', () => {
-  if (S.draggingBoundary >= 0) {
-    S.draggingBoundary = -1;
-    recomputeAll();
-  }
-});
-
-/* ============================================================
-   ★ 播放：修复 iOS 上 resume() 时序问题
-   ============================================================ */
-
-/* 同步 resume（用于用户手势栈内） */
-function tryResumeSync() {
-  if (!S.ctx) return;
-  if (S.ctx.state === 'suspended') {
-    try { S.ctx.resume(); } catch (e) {}
-  }
-}
-
-/* 确保 context running，返回 Promise（可能立即 resolve） */
-function ensureCtxRunning() {
-  if (!S.ctx) return Promise.resolve(false);
-  if (S.ctx.state === 'running') return Promise.resolve(true);
-  return new Promise((resolve) => {
-    let settled = false;
-    const done = (ok) => {
-      if (settled) return;
-      settled = true;
-      resolve(ok);
-    };
-    try {
-      const p = S.ctx.resume();
-      if (p && typeof p.then === 'function') {
-        p.then(() => done(S.ctx.state === 'running')).catch(() => done(false));
-      } else {
-        setTimeout(() => done(S.ctx.state === 'running'), 50);
-      }
-    } catch (e) {
-      done(false);
-    }
-    // 兜底：最多等 800ms
-    setTimeout(() => done(S.ctx.state === 'running'), 800);
   });
 }
 
+/* ============================================================
+   播放
+   ============================================================ */
 function stopPlay() {
-  if (S.srcNode) {
-    try { S.srcNode.stop(); } catch (e) {}
-    try { S.srcNode.disconnect(); } catch (e) {}
-    S.srcNode = null;
+  if (PLAYER.srcNode) {
+    try { PLAYER.srcNode.stop(); } catch (e) {}
+    try { PLAYER.srcNode.disconnect(); } catch (e) {}
+    PLAYER.srcNode = null;
   }
-  if (S.gainNode) {
-    try { S.gainNode.disconnect(); } catch (e) {}
-    S.gainNode = null;
+  if (PLAYER.gainNode) {
+    try { PLAYER.gainNode.disconnect(); } catch (e) {}
+    PLAYER.gainNode = null;
   }
-  S.playing = false;
-  if (S.rafId) cancelAnimationFrame(S.rafId);
-  S.rafId = null;
-  playheadEl.classList.remove('on');
-  updatePlayBtns();
+  if (PLAYER.songId) {
+    const song = G.songs.get(PLAYER.songId);
+    if (song && song.ui) song.ui.playhead.classList.remove('on');
+  }
+  PLAYER.playing = false;
+  if (PLAYER.rafId) cancelAnimationFrame(PLAYER.rafId);
+  PLAYER.rafId = null;
+  PLAYER.songId = null;
+  // 更新所有卡的按钮
+  G.songs.forEach(s => { if (s.ui) renderSongCard(s); });
 }
 
-function updatePlayBtns() {
-  $('#btnLoopA').textContent = (S.playing && S.mode === 'A') ? '❚❚ 停止循环' : '▶ 循环 A 段';
-  $('#btnLoopB').textContent = (S.playing && S.mode === 'B') ? '❚❚ 停止循环' : '▶ 循环 B 段';
-}
-
-/* ★ 关键：异步 startLoop，等 context 真的 running 后再 start */
-async function startLoop(startSec, endSec, mode) {
-  if (!S.buffer || !S.ctx) return;
-  if (endSec - startSec < 0.5) {
-    statusEl.className = 'status err';
-    statusEl.textContent = '选中段太短（< 0.5s）';
-    return;
+async function startLoop(song, startSec, endSec, mode) {
+  if (!song.buffer && song.audioData && G.ctx) {
+    // 懒解码
+    showProgress('解码音频…', 0.3);
+    try {
+      const ab = await new Promise((res, rej) => {
+        try { G.ctx.decodeAudioData(song.audioData.slice(0), res, rej); }
+        catch (e) { rej(e); }
+      });
+      song.buffer = ab;
+      song.sr = ab.sampleRate;
+      song.duration = ab.duration;
+      song.mono = toMono(ab);
+    } catch (err) {
+      showProgress('', 1); hideProgress();
+      if (song.ui) {
+        song.ui.bodyStatus.textContent = '解码失败：' + (err.message || err);
+        song.ui.bodyStatus.className = 'bodystatus err';
+      }
+      return;
+    }
+    hideProgress();
   }
+  if (!song.buffer || !G.ctx) return;
+  if (endSec - startSec < 0.5) return;
 
-  // 1. 用户手势栈内同步尝试 resume
   tryResumeSync();
-
-  // 2. 停止已有播放
   stopPlay();
 
-  // 3. 等 context 真的 running
   const ok = await ensureCtxRunning();
   if (!ok) {
-    statusEl.className = 'status warn';
-    statusEl.textContent = 'AudioContext 未 running（state=' + S.ctx.state + '）。检查：① 侧边静音拨片 ② 音量 ③ 用 Safari 打开';
+    if (song.ui) {
+      song.ui.bodyStatus.textContent = 'AudioContext 未就绪，检查静音拨片/音量/浏览器';
+      song.ui.bodyStatus.className = 'bodystatus warn';
+    }
     return;
   }
 
-  // 4. 创建节点
   try {
-    const node = S.ctx.createBufferSource();
-    const gain = S.ctx.createGain();
+    const node = G.ctx.createBufferSource();
+    const gain = G.ctx.createGain();
     gain.gain.value = 1;
-    node.buffer = S.buffer;
+    node.buffer = song.buffer;
     node.loop = true;
     node.loopStart = startSec;
     node.loopEnd = endSec;
     node.connect(gain);
-    gain.connect(S.ctx.destination);
+    gain.connect(G.ctx.destination);
 
-    const t0 = S.ctx.currentTime + 0.08;
+    const t0 = G.ctx.currentTime + 0.08;
     node.start(t0, startSec);
 
-    S.srcNode = node;
-    S.gainNode = gain;
-    S.startCtxTime = t0;
-    S.startOffset = startSec;
-    S.endOffset = endSec;
-    S.playing = true;
-    S.mode = mode;
+    PLAYER.srcNode = node;
+    PLAYER.gainNode = gain;
+    PLAYER.startCtxTime = t0;
+    PLAYER.startOffset = startSec;
+    PLAYER.endOffset = endSec;
+    PLAYER.playing = true;
+    PLAYER.mode = mode;
+    PLAYER.songId = song.id;
 
-    playheadEl.classList.add('on');
-    updatePlayBtns();
+    if (song.ui) song.ui.playhead.classList.add('on');
+    renderSongCard(song);
     rafLoop();
-
-    statusEl.className = 'status ok';
-    statusEl.textContent = '正在循环 ' + (mode === 'A' ? 'A 段' : 'B 段') + '（' + fmt(startSec) + ' → ' + fmt(endSec) + '）';
   } catch (err) {
     console.error(err);
-    statusEl.className = 'status err';
-    statusEl.textContent = '播放失败：' + (err.message || err);
+    if (song.ui) {
+      song.ui.bodyStatus.textContent = '播放失败：' + (err.message || err);
+      song.ui.bodyStatus.className = 'bodystatus err';
+    }
   }
 }
 
 function rafLoop() {
-  if (!S.playing) return;
-  const span = S.endOffset - S.startOffset;
+  if (!PLAYER.playing) return;
+  const song = G.songs.get(PLAYER.songId);
+  if (!song) { stopPlay(); return; }
+  const span = PLAYER.endOffset - PLAYER.startOffset;
   if (span <= 0) { stopPlay(); return; }
-  const elapsed = S.ctx.currentTime - S.startCtxTime;
-  const t = S.startOffset + (((elapsed % span) + span) % span);
-  playheadEl.style.left = (t / S.duration * 100) + '%';
-  $('#tNow').textContent = fmt(t);
-  S.rafId = requestAnimationFrame(rafLoop);
+  const elapsed = G.ctx.currentTime - PLAYER.startCtxTime;
+  const t = PLAYER.startOffset + (((elapsed % span) + span) % span);
+  if (song.ui) {
+    song.ui.playhead.style.left = (t / song.duration * 100) + '%';
+    song.ui.tNow.textContent = fmt(t);
+  }
+  PLAYER.rafId = requestAnimationFrame(rafLoop);
+}
+
+function testSound(song) {
+  if (!G.ctx) {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return;
+    G.ctx = new AC();
+  }
+  tryResumeSync();
+  ensureCtxRunning().then(ok => {
+    if (!ok) {
+      if (song.ui) {
+        song.ui.bodyStatus.textContent = 'AudioContext 未就绪';
+        song.ui.bodyStatus.className = 'bodystatus warn';
+      }
+      return;
+    }
+    const osc = G.ctx.createOscillator();
+    const g = G.ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.value = 440;
+    const now = G.ctx.currentTime;
+    g.gain.setValueAtTime(0, now);
+    g.gain.linearRampToValueAtTime(0.15, now + 0.02);
+    g.gain.setValueAtTime(0.15, now + 0.6);
+    g.gain.linearRampToValueAtTime(0, now + 0.8);
+    osc.connect(g); g.connect(G.ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.85);
+    if (song.ui) {
+      song.ui.bodyStatus.textContent = '测试音已播放 · ' + (ok ? 'AudioContext running' : '');
+      song.ui.bodyStatus.className = 'bodystatus ok';
+    }
+  });
 }
 
 /* ============================================================
-   测试声音：1 秒 440Hz 正弦波，验证音频管线
+   事件绑定
    ============================================================ */
-async function testSound() {
-  if (!S.ctx) {
-    const AC = window.AudioContext || window.webkitAudioContext;
-    if (!AC) { statusEl.className = 'status err'; statusEl.textContent = '不支持 AudioContext'; return; }
-    S.ctx = new AC();
+function bindSongEvents(song) {
+  const ui = song.ui;
+
+  // 折叠头点击
+  ui.head.addEventListener('click', e => {
+    if (e.target.closest('.iconbtn')) return;
+    toggleExpand(song);
+  });
+
+  // 展开/折叠
+  function toggleExpand(s) {
+    s.expanded = !s.expanded;
+    renderSongCard(s);
+    persistSong(s);
+    if (s.expanded && s.analyzeState === 'done') {
+      setTimeout(() => drawWaveFor(s), 30);
+    }
   }
-  tryResumeSync();
-  const ok = await ensureCtxRunning();
-  if (!ok) {
-    statusEl.className = 'status warn';
-    statusEl.textContent = 'AudioContext 未 running（state=' + S.ctx.state + '），无法测试';
+
+  // 导出这首歌
+  ui.btnExp.addEventListener('click', e => {
+    e.stopPropagation();
+    exportOne(song);
+  });
+
+  // 删除
+  ui.btnDel.addEventListener('click', async e => {
+    e.stopPropagation();
+    if (!confirm('确定删除「' + (song.fileName || song.originalName) + '」？')) return;
+    if (PLAYER.songId === song.id) stopPlay();
+    await dbDelete(song.id).catch(() => {});
+    if (song.ui && song.ui.card.parentNode) song.ui.card.parentNode.removeChild(song.ui.card);
+    G.songs.delete(song.id);
+    updateGlobalInfo();
+  });
+
+  // 名称输入
+  ui.nameInput.addEventListener('input', e => {
+    song.fileName = (e.target.value || '').trim() || song.originalName || '未命名';
+    ui.title.textContent = song.fileName;
+    if (song.ui) {
+      ui.card.querySelector('.info .title').textContent = song.fileName;
+    }
+  });
+  ui.nameInput.addEventListener('blur', () => persistSong(song));
+
+  // 波形交互
+  let dragBoundary = -1;
+  let dragPointerId = null;
+
+  ui.wavebox.addEventListener('pointerdown', e => {
+    if (!song.mono) return;
+    e.preventDefault();
+    const rect = ui.wavebox.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const W = rect.width;
+
+    let hitIdx = -1, bestDist = 14;
+    if (song.boundaries) {
+      for (let i = 1; i < song.boundaries.length - 1; i++) {
+        const bx = song.boundaries[i] / song.N * W;
+        const d = Math.abs(bx - x);
+        if (d < bestDist) { bestDist = d; hitIdx = i; }
+      }
+    }
+    if (hitIdx > 0) {
+      dragBoundary = hitIdx;
+      dragPointerId = e.pointerId;
+      try { ui.wavebox.setPointerCapture(e.pointerId); } catch (err) {}
+      return;
+    }
+
+    const pct = Math.max(0, Math.min(1, x / W));
+    const t = pct * song.duration;
+    ui.playhead.classList.add('on');
+    ui.playhead.style.left = (pct * 100) + '%';
+    ui.tNow.textContent = fmt(t);
+
+    // 选段
+    if (song.segments) {
+      for (let k = 0; k < song.segments.length; k++) {
+        const sg = song.segments[k];
+        if (t >= sg.startSec && t <= sg.endSec) {
+          song.selectedSegIdx = k;
+          if (song.pairs) {
+            let found = -1;
+            for (let p = 0; p < song.pairs.length; p++) {
+              if (song.pairs[p].i === k || song.pairs[p].j === k) { found = p; break; }
+            }
+            if (found >= 0) song.selectedPairIdx = found;
+          }
+          renderCands(song);
+          drawWaveFor(song);
+          updateSegInfo(song);
+          break;
+        }
+      }
+    }
+  });
+
+  ui.wavebox.addEventListener('pointermove', e => {
+    if (dragBoundary < 0) return;
+    e.preventDefault();
+    const rect = ui.wavebox.getBoundingClientRect();
+    const x = Math.max(0, Math.min(rect.width, e.clientX - rect.left));
+    const t = x / rect.width * song.duration;
+    const newFrame = Math.round(t / song.hopSec);
+    const prevFrame = song.boundaries[dragBoundary - 1];
+    const nextFrame = song.boundaries[dragBoundary + 1];
+    const minGap = Math.round(2 / song.hopSec);
+    const clamped = Math.max(prevFrame + minGap, Math.min(nextFrame - minGap, newFrame));
+    song.boundaries[dragBoundary] = clamped;
+    drawWaveFor(song);
+  });
+
+  ui.wavebox.addEventListener('pointerup', async e => {
+    if (dragBoundary >= 0) {
+      dragBoundary = -1;
+      try { ui.wavebox.releasePointerCapture(e.pointerId); } catch (err) {}
+      recomputeSegments(song);
+      renderCands(song);
+      drawWaveFor(song);
+      await persistSong(song);
+      if (song.ui) {
+        ui.bodyStatus.textContent = '边界已调整，重新匹配';
+        ui.bodyStatus.className = 'bodystatus ok';
+      }
+    }
+  });
+
+  // 播放按钮
+  ui.btnLoopA.addEventListener('click', () => {
+    if (PLAYER.playing && PLAYER.songId === song.id && PLAYER.mode === 'A') { stopPlay(); return; }
+    if (song.selectedPairIdx < 0 || !song.pairs[song.selectedPairIdx]) return;
+    const p = song.pairs[song.selectedPairIdx];
+    startLoop(song, p.A.startSec, p.A.endSec, 'A');
+  });
+  ui.btnLoopB.addEventListener('click', () => {
+    if (PLAYER.playing && PLAYER.songId === song.id && PLAYER.mode === 'B') { stopPlay(); return; }
+    if (song.selectedPairIdx < 0 || !song.pairs[song.selectedPairIdx]) return;
+    const p = song.pairs[song.selectedPairIdx];
+    startLoop(song, p.B.startSec, p.B.endSec, 'B');
+  });
+  ui.btnStop.addEventListener('click', stopPlay);
+  ui.btnTest.addEventListener('click', () => testSound(song));
+
+  // 结构操作
+  ui.btnSplit.addEventListener('click', async () => {
+    if (song.selectedSegIdx < 0 || !song.segments) return;
+    const seg = song.segments[song.selectedSegIdx];
+    const pct = parseFloat(ui.playhead.style.left) / 100 || 0;
+    const splitSec = pct * song.duration;
+    if (splitSec <= seg.startSec + 1 || splitSec >= seg.endSec - 1) return;
+    const splitFrame = Math.round(splitSec / song.hopSec);
+    const idx = song.boundaries.indexOf(seg.startFrame);
+    if (idx >= 0) {
+      song.boundaries.splice(idx + 1, 0, splitFrame);
+      recomputeSegments(song);
+      renderSongCard(song);
+      await persistSong(song);
+    }
+  });
+  ui.btnMergeL.addEventListener('click', async () => {
+    if (song.selectedSegIdx <= 0 || !song.segments) return;
+    const seg = song.segments[song.selectedSegIdx];
+    const idx = song.boundaries.indexOf(seg.startFrame);
+    if (idx > 0) {
+      song.boundaries.splice(idx, 1);
+      song.selectedSegIdx = Math.max(0, song.selectedSegIdx - 1);
+      recomputeSegments(song);
+      renderSongCard(song);
+      await persistSong(song);
+    }
+  });
+  ui.btnMergeR.addEventListener('click', async () => {
+    if (song.selectedSegIdx < 0 || !song.segments || song.selectedSegIdx >= song.segments.length - 1) return;
+    const seg = song.segments[song.selectedSegIdx];
+    const idx = song.boundaries.indexOf(seg.endFrame);
+    if (idx > 0 && idx < song.boundaries.length - 1) {
+      song.boundaries.splice(idx, 1);
+      recomputeSegments(song);
+      renderSongCard(song);
+      await persistSong(song);
+    }
+  });
+  ui.btnReset.addEventListener('click', async () => {
+    if (!song.originalBoundaries) return;
+    song.boundaries = song.originalBoundaries.slice();
+    recomputeSegments(song);
+    renderSongCard(song);
+    await persistSong(song);
+  });
+
+  // 参数滑块
+  let paramTimer = null;
+  function scheduleRecompute(needRedoBounds) {
+    clearTimeout(paramTimer);
+    paramTimer = setTimeout(async () => {
+      if (needRedoBounds && song.novelty) {
+        const minFrames = Math.round(song.params.MIN_SEG / song.hopSec);
+        let bounds = findBoundaryPeaks(song.novelty, song.N, minFrames, song.params.BOUNDARY_SENS);
+        bounds = snapBoundariesToOnsets(bounds, song.onsetEnv, song.onsetHopSec, song.hopSec, song.N);
+        song.boundaries = bounds;
+        song.originalBoundaries = bounds.slice();
+      }
+      recomputeSegments(song);
+      renderSongCard(song);
+      await persistSong(song);
+    }, 350);
+  }
+
+  ui.pMin.addEventListener('input', e => {
+    song.params.MIN_SEG = parseInt(e.target.value, 10);
+    ui.vMin.textContent = song.params.MIN_SEG + 's';
+    scheduleRecompute(true);
+  });
+  ui.pMax.addEventListener('input', e => {
+    song.params.MAX_SEG = parseInt(e.target.value, 10);
+    ui.vMax.textContent = song.params.MAX_SEG + 's';
+    scheduleRecompute(false);
+  });
+  ui.pSim.addEventListener('input', e => {
+    song.params.SIM_THRESHOLD = parseFloat(e.target.value);
+    ui.vSim.textContent = song.params.SIM_THRESHOLD.toFixed(2);
+    scheduleRecompute(false);
+  });
+  ui.pBnd.addEventListener('input', e => {
+    song.params.BOUNDARY_SENS = parseFloat(e.target.value);
+    ui.vBnd.textContent = song.params.BOUNDARY_SENS.toFixed(2);
+    scheduleRecompute(true);
+  });
+  ui.pWei.addEventListener('input', e => {
+    song.params.WEIGHT_PITCH = parseFloat(e.target.value);
+    ui.vWei.textContent = song.params.WEIGHT_PITCH.toFixed(2);
+    scheduleRecompute(false);
+  });
+}
+
+/* ============================================================
+   导入流程
+   ============================================================ */
+$('#drop').addEventListener('dragover', e => { e.preventDefault(); $('#drop').classList.add('over'); });
+$('#drop').addEventListener('dragleave', () => $('#drop').classList.remove('over'));
+$('#drop').addEventListener('drop', e => {
+  e.preventDefault();
+  $('#drop').classList.remove('over');
+  const files = Array.from(e.dataTransfer.files).filter(f => /audio\//.test(f.type) || /\.(mp3|m4a|wav|aac|ogg|flac)$/i.test(f.name));
+  if (files.length > 0) handleFiles(files);
+});
+$('#file').addEventListener('change', e => {
+  const files = Array.from(e.target.files || []);
+  if (files.length > 0) handleFiles(files);
+  e.target.value = ''; // 允许重复选同一文件
+});
+
+async function handleFiles(files) {
+  if (!G.ctx) {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) {
+      $('#status').className = 'status err';
+      $('#status').textContent = '浏览器不支持 AudioContext';
+      return;
+    }
+    try { G.ctx = new AC(); } catch (e) {
+      $('#status').className = 'status err';
+      $('#status').textContent = 'AudioContext 创建失败：' + e.message;
+      return;
+    }
+  }
+  if (G.ctx.state === 'suspended') { try { G.ctx.resume(); } catch (e) {} }
+
+  $('#status').className = 'status';
+  $('#status').textContent = '准备导入 ' + files.length + ' 个文件…';
+
+  const songlist = $('#songlist');
+  const newSongs = [];
+
+  for (const file of files) {
+    try {
+      const song = createSongRecord(file);
+      // 检查是否已存在同名
+      let dup = null;
+      G.songs.forEach(s => {
+        if (s.originalName === song.originalName && Math.abs((s.fileSize || 0) - file.size) < 1024) dup = s;
+      });
+      if (dup) {
+        if (!confirm('已存在同名歌曲「' + song.originalName + '」，重新导入吗？')) continue;
+        await dbDelete(dup.id).catch(() => {});
+        if (dup.ui && dup.ui.card.parentNode) dup.ui.card.parentNode.removeChild(dup.ui.card);
+        G.songs.delete(dup.id);
+      }
+
+      // 读取音频数据
+      const ab = await file.arrayBuffer();
+      song.audioData = ab;
+      song.fileSize = file.size;
+      song.mimeType = file.type || '';
+
+      G.songs.set(song.id, song);
+      newSongs.push(song);
+
+      // 渲染卡片（先折叠）
+      renderSongCard(song);
+      songlist.appendChild(song.ui.card);
+
+      // 立即开始分析（进入队列）
+      enqueueAnalyze(song);
+    } catch (err) {
+      console.error('导入失败：', file.name, err);
+    }
+  }
+
+  // 展开最后一首（最新的）
+  if (newSongs.length > 0) {
+    const last = newSongs[newSongs.length - 1];
+    last.expanded = true;
+    renderSongCard(last);
+  }
+
+  updateGlobalInfo();
+  $('#status').className = 'status ok';
+  $('#status').textContent = '已导入 ' + newSongs.length + ' 首，正在后台分析…';
+}
+
+/* ============================================================
+   导出/导入数据包
+   ============================================================ */
+function songToExportRecord(song) {
+  return {
+    originalName: song.originalName,
+    fileName: song.fileName,
+    fileSize: song.fileSize,
+    mimeType: song.mimeType,
+    duration: song.duration,
+    sr: song.sr,
+    audioB64: song.audioData ? ab2b64(song.audioData) : null,
+    params: { ...song.params },
+    // 只导出必要的分析结果
+    boundaries: song.boundaries ? Array.from(song.boundaries) : null,
+    originalBoundaries: song.originalBoundaries ? Array.from(song.originalBoundaries) : null,
+    N: song.N,
+    hopSec: song.hopSec,
+    chroma: song.chroma ? Array.from(song.chroma) : null,
+    contrast: song.contrast ? Array.from(song.contrast) : null,
+    rms: song.rms ? Array.from(song.rms) : null,
+    onsetEnv: song.onsetEnv ? Array.from(song.onsetEnv) : null,
+    onsetHopSec: song.onsetHopSec,
+    novelty: song.novelty ? Array.from(song.novelty) : null,
+    segments: song.segments ? song.segments.map(s => ({
+      idx: s.idx, startFrame: s.startFrame, endFrame: s.endFrame,
+      startSec: s.startSec, endSec: s.endSec, dur: s.dur,
+      featP: Array.from(s.featP), featT: Array.from(s.featT),
+      avgRms: s.avgRms
+    })) : null,
+    pairs: song.pairs ? song.pairs.map(p => ({
+      i: p.i, j: p.j, sim: p.sim, pitch: p.pitch, timbre: p.timbre, dur: p.dur
+    })) : null,
+    selectedPairIdx: song.selectedPairIdx,
+    selectedSegIdx: song.selectedSegIdx,
+    expanded: song.expanded,
+    analyzeState: 'done'
+  };
+}
+
+function download(filename, content, mime) {
+  const blob = content instanceof Blob ? content : new Blob([content], { type: mime || 'application/octet-stream' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 5000);
+}
+
+function exportOne(song) {
+  try {
+    const record = songToExportRecord(song);
+    const data = {
+      version: EXPORT_VERSION,
+      type: 'single',
+      exportedAt: Date.now(),
+      song: record
+    };
+    const name = (song.fileName || song.originalName || 'loop') + '.lfp';
+    download(name, JSON.stringify(data), 'application/json');
+    $('#status').className = 'status ok';
+    $('#status').textContent = '已导出 ' + name;
+  } catch (err) {
+    $('#status').className = 'status err';
+    $('#status').textContent = '导出失败：' + (err.message || err);
+  }
+}
+
+function exportAll() {
+  if (G.songs.size === 0) {
+    $('#status').className = 'status err';
+    $('#status').textContent = '没有歌曲可导出';
     return;
   }
   try {
-    const osc = S.ctx.createOscillator();
-    const gain = S.ctx.createGain();
-    osc.type = 'sine';
-    osc.frequency.value = 440;
-    // 淡入淡出，避免爆音
-    const now = S.ctx.currentTime;
-    gain.gain.setValueAtTime(0, now);
-    gain.gain.linearRampToValueAtTime(0.15, now + 0.02);
-    gain.gain.setValueAtTime(0.15, now + 0.6);
-    gain.gain.linearRampToValueAtTime(0, now + 0.8);
-    osc.connect(gain);
-    gain.connect(S.ctx.destination);
-    osc.start(now);
-    osc.stop(now + 0.85);
-    statusEl.className = 'status ok';
-    statusEl.textContent = '测试音已播放 · 如果没听到，检查音量/静音拨片 · state=' + S.ctx.state;
+    showProgress('正在打包…', 0.2);
+    const records = [];
+    G.songs.forEach(song => {
+      if (song.analyzeState === 'done') {
+        records.push(songToExportRecord(song));
+      }
+    });
+    showProgress('正在打包…', 0.7);
+    const data = {
+      version: EXPORT_VERSION,
+      type: 'all',
+      exportedAt: Date.now(),
+      songs: records
+    };
+    download('loop-finder-all-' + Date.now() + '.lfp', JSON.stringify(data), 'application/json');
+    showProgress('', 1);
+    hideProgress();
+    $('#status').className = 'status ok';
+    $('#status').textContent = '已导出 ' + records.length + ' 首';
   } catch (err) {
-    statusEl.className = 'status err';
-    statusEl.textContent = '测试音失败：' + (err.message || err);
+    hideProgress();
+    $('#status').className = 'status err';
+    $('#status').textContent = '导出失败：' + (err.message || err);
   }
 }
 
+function b64ToFloat32(b64) {
+  if (!b64) return null;
+  const ab = b642ab(b64);
+  return new Float32Array(ab);
+}
+
+function recordToSong(rec) {
+  const song = createSongRecord({
+    name: (rec.originalName || 'untitled') + '.mp3',
+    size: rec.fileSize || 0,
+    type: rec.mimeType || ''
+  });
+  song.originalName = rec.originalName || 'untitled';
+  song.fileName = rec.fileName || rec.originalName || 'untitled';
+  song.duration = rec.duration || 0;
+  song.sr = rec.sr || 0;
+  song.params = { ...DEF, ...(rec.params || {}) };
+  song.boundaries = rec.boundaries ? rec.boundaries.slice() : null;
+  song.originalBoundaries = rec.originalBoundaries ? rec.originalBoundaries.slice() : null;
+  song.N = rec.N || 0;
+  song.hopSec = rec.hopSec || CFG.HOP_SEC;
+  song.chroma = rec.chroma ? new Float32Array(rec.chroma) : null;
+  song.contrast = rec.contrast ? new Float32Array(rec.contrast) : null;
+  song.rms = rec.rms ? new Float32Array(rec.rms) : null;
+  song.onsetEnv = rec.onsetEnv ? new Float32Array(rec.onsetEnv) : null;
+  song.onsetHopSec = rec.onsetHopSec || CFG.ONSET_HOP_SEC;
+  song.novelty = rec.novelty ? new Float32Array(rec.novelty) : null;
+  song.segments = rec.segments ? rec.segments.map(s => ({
+    ...s,
+    featP: new Float32Array(s.featP),
+    featT: new Float32Array(s.featT)
+  })) : null;
+  // 恢复 pairs 需要重建（因为依赖 segments 引用）
+  if (rec.pairs && song.segments) {
+    song.pairs = rec.pairs.map(p => ({
+      ...p,
+      A: song.segments[p.i],
+      B: song.segments[p.j]
+    }));
+  } else {
+    song.pairs = null;
+  }
+  song.selectedPairIdx = rec.selectedPairIdx != null ? rec.selectedPairIdx : -1;
+  song.selectedSegIdx = rec.selectedSegIdx != null ? rec.selectedSegIdx : -1;
+  song.expanded = !!rec.expanded;
+  song.audioData = rec.audioB64 ? b642ab(rec.audioB64) : null;
+  song.analyzeState = song.chroma ? 'done' : 'pending';
+  return song;
+}
+
+$('#btnExportAll').addEventListener('click', exportAll);
+
+$('#btnImport').addEventListener('click', () => {
+  $('#importFile').click();
+});
+
+$('#importFile').addEventListener('change', async e => {
+  const f = e.target.files && e.target.files[0];
+  e.target.value = '';
+  if (!f) return;
+  try {
+    showProgress('正在读取数据包…', 0.1);
+    const text = await f.text();
+    showProgress('正在解析…', 0.5);
+    const data = JSON.parse(text);
+    if (!data || !data.type) throw new Error('无法识别的数据包');
+
+    let records = [];
+    if (data.type === 'single' && data.song) records = [data.song];
+    else if (data.type === 'all' && Array.isArray(data.songs)) records = data.songs;
+    else throw new Error('数据包类型不正确');
+
+    const songlist = $('#songlist');
+    let added = 0;
+    for (const rec of records) {
+      const song = recordToSong(rec);
+      G.songs.set(song.id, song);
+      renderSongCard(song);
+      songlist.appendChild(song.ui.card);
+      // 持久化
+      await persistSong(song);
+      added++;
+    }
+    if (added > 0 && data.type === 'single') {
+      // 展开刚导入的
+      const last = G.songs.get(Array.from(G.songs.keys()).pop());
+      if (last) {
+        last.expanded = true;
+        renderSongCard(last);
+        setTimeout(() => drawWaveFor(last), 30);
+      }
+    }
+    updateGlobalInfo();
+    showProgress('', 1);
+    hideProgress();
+    $('#status').className = 'status ok';
+    $('#status').textContent = '已导入 ' + added + ' 首';
+  } catch (err) {
+    hideProgress();
+    console.error(err);
+    $('#status').className = 'status err';
+    $('#status').textContent = '导入失败：' + (err.message || err);
+  }
+});
+
+$('#btnClearAll').addEventListener('click', async () => {
+  if (G.songs.size === 0) return;
+  if (!confirm('确定清空全部 ' + G.songs.size + ' 首歌？无法恢复。')) return;
+  stopPlay();
+  try { await dbClear(); } catch (e) {}
+  G.songs.forEach(s => { if (s.ui && s.ui.card.parentNode) s.ui.card.parentNode.removeChild(s.ui.card); });
+  G.songs.clear();
+  updateGlobalInfo();
+  $('#status').className = 'status ok';
+  $('#status').textContent = '已清空';
+});
+
 /* ============================================================
-   按钮
+   启动：从 IndexedDB 恢复
    ============================================================ */
-$('#btnLoopA').addEventListener('click', () => {
-  tryResumeSync();
-  if (S.playing && S.mode === 'A') { stopPlay(); return; }
-  if (S.selectedPairIdx < 0) { statusEl.className = 'status err'; statusEl.textContent = '请先选一个段对'; return; }
-  const p = S.pairs[S.selectedPairIdx];
-  startLoop(p.A.startSec, p.A.endSec, 'A');
-});
-
-$('#btnLoopB').addEventListener('click', () => {
-  tryResumeSync();
-  if (S.playing && S.mode === 'B') { stopPlay(); return; }
-  if (S.selectedPairIdx < 0) { statusEl.className = 'status err'; statusEl.textContent = '请先选一个段对'; return; }
-  const p = S.pairs[S.selectedPairIdx];
-  startLoop(p.B.startSec, p.B.endSec, 'B');
-});
-
-$('#btnStop').addEventListener('click', stopPlay);
-$('#btnTest').addEventListener('click', testSound);
-
-$('#btnSplit').addEventListener('click', async () => {
-  if (S.selectedSegIdx < 0 || !S.segments) return;
-  const seg = S.segments[S.selectedSegIdx];
-  const pct = parseFloat(playheadEl.style.left) / 100 || 0;
-  const splitSec = pct * S.duration;
-  if (splitSec <= seg.startSec + 1 || splitSec >= seg.endSec - 1) {
-    statusEl.className = 'status err';
-    statusEl.textContent = '播放头不在选中段内，或离边界太近';
+async function init() {
+  if (!window.indexedDB) {
+    $('#status').className = 'status err';
+    $('#status').textContent = '浏览器不支持 IndexedDB，无法持久化';
     return;
   }
-  const splitFrame = Math.round(splitSec / S.hopSec);
-  const idx = S.boundaries.indexOf(seg.startFrame);
-  if (idx >= 0) {
-    S.boundaries.splice(idx + 1, 0, splitFrame);
-    await recomputeAll();
-    statusEl.className = 'status ok';
-    statusEl.textContent = '已拆分';
+  try {
+    const records = await dbGetAll();
+    if (!records || records.length === 0) {
+      updateGlobalInfo();
+      return;
+    }
+    records.sort((a, b) => (b.addedAt || 0) - (a.addedAt || 0));
+    const songlist = $('#songlist');
+    for (const rec of records) {
+      const song = recordToSong(rec);
+      G.songs.set(song.id, song);
+      renderSongCard(song);
+      songlist.appendChild(song.ui.card);
+    }
+    updateGlobalInfo();
+    $('#status').className = 'status ok';
+    $('#status').textContent = '已恢复 ' + records.length + ' 首';
+  } catch (err) {
+    console.error(err);
+    $('#status').className = 'status err';
+    $('#status').textContent = '恢复失败：' + (err.message || err);
   }
-});
-
-$('#btnMergeL').addEventListener('click', async () => {
-  if (S.selectedSegIdx <= 0 || !S.segments) return;
-  const seg = S.segments[S.selectedSegIdx];
-  const idx = S.boundaries.indexOf(seg.startFrame);
-  if (idx > 0) {
-    S.boundaries.splice(idx, 1);
-    await recomputeAll();
-    S.selectedSegIdx = Math.max(0, S.selectedSegIdx - 1);
-    statusEl.className = 'status ok';
-    statusEl.textContent = '已与左邻合并';
-  }
-});
-
-$('#btnMergeR').addEventListener('click', async () => {
-  if (S.selectedSegIdx < 0 || !S.segments || S.selectedSegIdx >= S.segments.length - 1) return;
-  const seg = S.segments[S.selectedSegIdx];
-  const idx = S.boundaries.indexOf(seg.endFrame);
-  if (idx > 0 && idx < S.boundaries.length - 1) {
-    S.boundaries.splice(idx, 1);
-    await recomputeAll();
-    statusEl.className = 'status ok';
-    statusEl.textContent = '已与右邻合并';
-  }
-});
-
-$('#btnReset').addEventListener('click', async () => {
-  if (!S.originalBoundaries) return;
-  S.boundaries = S.originalBoundaries.slice();
-  await recomputeAll();
-  statusEl.className = 'status ok';
-  statusEl.textContent = '已重置到算法原始边界';
-});
+}
 
 /* ============================================================
-   参数滑块
+   窗口大小变化
    ============================================================ */
-let debounceTimer = null;
-function scheduleReanalyze() {
-  clearTimeout(debounceTimer);
-  debounceTimer = setTimeout(async () => {
-    if (!S.chroma) return;
-    await redoBoundaries();
-  }, 400);
-}
-function scheduleRematch() {
-  clearTimeout(debounceTimer);
-  debounceTimer = setTimeout(async () => {
-    if (!S.chroma) return;
-    await recomputeAll();
-  }, 200);
+if (window.ResizeObserver) {
+  new ResizeObserver(() => {
+    redrawAllWaves();
+  }).observe(document.body);
+} else {
+  window.addEventListener('resize', redrawAllWaves);
 }
 
-function syncSliders() {
-  $('#pMin').value = CFG.MIN_SEG; $('#vMin').textContent = CFG.MIN_SEG + 's';
-  $('#pMax').value = CFG.MAX_SEG; $('#vMax').textContent = CFG.MAX_SEG + 's';
-  $('#pSim').value = CFG.SIM_THRESHOLD; $('#vSim').textContent = CFG.SIM_THRESHOLD.toFixed(2);
-  $('#pBnd').value = CFG.BOUNDARY_SENS; $('#vBnd').textContent = CFG.BOUNDARY_SENS.toFixed(2);
-  $('#pWei').value = CFG.WEIGHT_PITCH; $('#vWei').textContent = CFG.WEIGHT_PITCH.toFixed(2);
-}
-
-$('#pMin').addEventListener('input', e => {
-  CFG.MIN_SEG = parseInt(e.target.value, 10);
-  $('#vMin').textContent = CFG.MIN_SEG + 's';
-  saveParams(S.fileName);
-  scheduleReanalyze();
-});
-$('#pMax').addEventListener('input', e => {
-  CFG.MAX_SEG = parseInt(e.target.value, 10);
-  $('#vMax').textContent = CFG.MAX_SEG + 's';
-  saveParams(S.fileName);
-  scheduleRematch();
-});
-$('#pSim').addEventListener('input', e => {
-  CFG.SIM_THRESHOLD = parseFloat(e.target.value);
-  $('#vSim').textContent = CFG.SIM_THRESHOLD.toFixed(2);
-  saveParams(S.fileName);
-  scheduleRematch();
-});
-$('#pBnd').addEventListener('input', e => {
-  CFG.BOUNDARY_SENS = parseFloat(e.target.value);
-  $('#vBnd').textContent = CFG.BOUNDARY_SENS.toFixed(2);
-  saveParams(S.fileName);
-  scheduleReanalyze();
-});
-$('#pWei').addEventListener('input', e => {
-  CFG.WEIGHT_PITCH = parseFloat(e.target.value);
-  $('#vWei').textContent = CFG.WEIGHT_PITCH.toFixed(2);
-  saveParams(S.fileName);
-  scheduleRematch();
-});
-
-/* ============================================================
-   键盘
-   ============================================================ */
+/* 键盘：空格播放/停止 */
 document.addEventListener('keydown', e => {
   if (e.target.matches('input,textarea')) return;
   if (e.code === 'Space') {
     e.preventDefault();
     tryResumeSync();
-    if (S.playing) stopPlay();
-    else if (S.selectedPairIdx >= 0) {
-      const p = S.pairs[S.selectedPairIdx];
-      startLoop(p.A.startSec, p.A.endSec, 'A');
+    if (PLAYER.playing) { stopPlay(); return; }
+    // 找第一个展开且有选中段对的歌
+    let target = null;
+    G.songs.forEach(s => {
+      if (!target && s.expanded && s.selectedPairIdx >= 0 && s.pairs && s.pairs[s.selectedPairIdx]) target = s;
+    });
+    if (target) {
+      const p = target.pairs[target.selectedPairIdx];
+      startLoop(target, p.A.startSec, p.A.endSec, 'A');
     }
   }
 });
 
-/* ============================================================
-   Resize
-   ============================================================ */
-if (window.ResizeObserver) {
-  new ResizeObserver(() => {
-    S.peaks = null;
-    drawWave();
-  }).observe(wavebox);
-} else {
-  window.addEventListener('resize', () => {
-    S.peaks = null;
-    drawWave();
-  });
-}
-
-syncSliders();
+init();
 
 })();
 </script>
