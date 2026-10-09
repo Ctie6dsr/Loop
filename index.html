@@ -880,7 +880,6 @@ async function runQueue() {
    ============================================================ */
 async function persistSong(song) {
   if (!window.indexedDB) return;
-  // 不存 buffer/mono/UI，只存必要数据
   const record = {
     id: song.id,
     originalName: song.originalName,
@@ -890,7 +889,7 @@ async function persistSong(song) {
     addedAt: song.addedAt,
     duration: song.duration,
     sr: song.sr,
-    audioData: song.audioData,
+    audioB64: song.audioB64 || (song.audioData ? ab2b64(song.audioData) : null),
     chroma: song.chroma,
     contrast: song.contrast,
     rms: song.rms,
@@ -1860,7 +1859,6 @@ function recordToSong(rec) {
     featP: new Float32Array(s.featP),
     featT: new Float32Array(s.featT)
   })) : null;
-  // 恢复 pairs 需要重建（因为依赖 segments 引用）
   if (rec.pairs && song.segments) {
     song.pairs = rec.pairs.map(p => ({
       ...p,
@@ -1873,11 +1871,24 @@ function recordToSong(rec) {
   song.selectedPairIdx = rec.selectedPairIdx != null ? rec.selectedPairIdx : -1;
   song.selectedSegIdx = rec.selectedSegIdx != null ? rec.selectedSegIdx : -1;
   song.expanded = !!rec.expanded;
-  song.audioData = rec.audioB64 ? b642ab(rec.audioB64) : null;
+  // 音频数据：优先 base64，否则兼容旧格式
+  if (rec.audioB64) {
+    song.audioData = b642ab(rec.audioB64);
+    song.audioB64 = rec.audioB64;
+  } else if (rec.audioData) {
+    if (rec.audioData instanceof ArrayBuffer) {
+      song.audioData = rec.audioData;
+    } else if (rec.audioData.buffer instanceof ArrayBuffer) {
+      song.audioData = rec.audioData.buffer;
+    } else {
+      song.audioData = null;
+    }
+  } else {
+    song.audioData = null;
+  }
   song.analyzeState = song.chroma ? 'done' : 'pending';
   return song;
 }
-
 $('#btnExportAll').addEventListener('click', exportAll);
 
 $('#btnImport').addEventListener('click', () => {
